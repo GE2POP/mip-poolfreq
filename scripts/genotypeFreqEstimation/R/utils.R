@@ -274,7 +274,7 @@ compute_stats_per_exp_freq <- function(freqs_df, out_dir = NULL, suffix = "") {
 #' @param out_file Path to the output file to save the plot (default = NULL)
 plot_correlation_with_exp_freq <- function(freqs_df, extra_freqs_df = NULL, out_file = NULL) {
   
-  if (! is.null(out_file)) { png(out_file, width = 800, height = 600) }
+  if (! is.null(out_file)) { pdf(out_file, width = 11.11, height = 8.33) }
   
   for (condition in colnames(freqs_df)[!colnames(freqs_df) %in% c("Component", "Mixture", "ExpFreq")]) {
     plot(freqs_df[, condition] ~ freqs_df$ExpFreq, pch = 16, las = 2, col = alpha("darkred", 0.3), 
@@ -457,7 +457,7 @@ compare_different_est_freqs<-function(freqs_to_compare, variable_name, out_dir, 
   
   plot_correlation_with_exp_freq(
     freqs_df = freqs_to_compare,
-    out_file = glue("{out_dir}/correlation_plot{suffix}.png")
+    out_file = glue("{out_dir}/correlation_plot{suffix}.pdf")
   )
   
   bias <- compute_bias(

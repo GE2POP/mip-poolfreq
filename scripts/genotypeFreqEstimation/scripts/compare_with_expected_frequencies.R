@@ -170,7 +170,7 @@ if (! is.null(allele_freqs_components)){
 plot_correlation_with_exp_freq(
   freqs_df = genotype_frequencies_mixtures,
   extra_freqs_df = genotype_frequencies_components,
-  out_file = glue("{general_subdir}/correlation_plot.png")
+  out_file = glue("{general_subdir}/correlation_plot.pdf")
 )
 
 compute_bias(
