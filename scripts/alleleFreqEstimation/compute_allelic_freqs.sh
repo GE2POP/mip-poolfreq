@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Vérification des paramètres
+# Check parameters
 if [ "$#" -ne 2 ]; then
     echo "Usage: $0 <VCF_PATH> <SUFFIX>"
     exit 1
@@ -13,14 +13,14 @@ btquery_output="$SUFFIX".btquery
 output_freqs=ref_allelic_freqs_"$SUFFIX".tsv
 output_depths=total_depths_"$SUFFIX".tsv
 
-# Extraction des données AD avec bcftools
+# Extract allele depths (AD) with bcftools
 bcftools query -f '%CHROM\t%POS[\t%AD]\n' "$VCF_PATH" > "$btquery_output"
 
-# Récupération de l'en-tête (noms d'échantillons), sans le "#" sur CHROM
+# Retrieve the header (sample names)
 grep '#' "$VCF_PATH" | tail -1 | sed 's/ID.*FORMAT\t//' | sed 's/^#//' > "$output_freqs"
 grep '#' "$VCF_PATH" | tail -1 | sed 's/ID.*FORMAT\t//' | sed 's/^#//' > "$output_depths"
 
-# Calcul des fréquences alléliques
+# Compute allele frequencies
 while IFS=$'\t' read -r chr pos rest; do
   freqs=""
   depths=""
