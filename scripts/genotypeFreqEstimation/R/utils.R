@@ -629,3 +629,24 @@ plot_MAF_hist<-function(vcf, x_lim_values, out_file = NULL){
     }
   
 }
+
+#' Compute estimation errors
+#'
+#' @param freqs_df Dataframe with at least an "ExpFreq" colomn (providing the expected frequencies) and an estimated frequencies column
+#' @param out_dir Path the the output directory to write output files (default = NULL)
+#' @param suffix Suffix to add in the output file names (default = "")
+#' @return An error dataframe
+compute_errors <- function(freqs_df, out_dir = NULL, suffix = "") {
+  est_freq_cols <- setdiff(colnames(freqs_df), c("Component", "Mixture", "Origin", "ExpFreq"))
+  errors_df<-freqs_df
+  for (condition in est_freq_cols) {
+    error_col <- glue("error_{condition}")
+    errors_df[[error_col]] <- errors_df[[condition]] - errors_df[["ExpFreq"]]
+  }
+  errors_df<-errors_df[,!(names(errors_df) %in% c("ExpFreq", est_freq_cols))]
+  
+  if (! is.null(out_dir)) {
+    write.table(errors_df, glue("{out_dir}/errors{suffix}.tsv"), row.names = FALSE, quote = F, sep ="\t")
+  }
+  return(errors_df)
+}
