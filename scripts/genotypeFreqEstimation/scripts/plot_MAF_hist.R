@@ -8,9 +8,12 @@ options(error = function() {
 
 # v ... to replace with CLI params ... v
 ## Input parameters
-genotypeFreqEstimation_path="~/MIPs/PUBLI/03_scripts/genotypeFreqEstimation"
-genotyping_vcf_path=paste0(genotypeFreqEstimation_path, "/tests/data/GENOTYPING_MATRIX/04__Genotype_Locus1_Sample_Locus2_Filtered.vcf")
-output_file_name=paste0(genotypeFreqEstimation_path, "/tests/results/plot_MAF_hist/MAF_hist.png")
+genotypeFreqEstimation_path="~/GitHub/mip-poolfreq/scripts/genotypeFreqEstimation"
+genotyping_vcf_path=paste0(genotypeFreqEstimation_path, "/data_test/data/GENOTYPING_MATRIX/04__Genotype_Locus1_Sample_Locus2_Filtered.vcf")
+lib_names_corresp_path=paste0(genotypeFreqEstimation_path, "/data_test/data/infos_files/corresp_comp_genotypes_libnames.tsv")
+output_file_name=paste0(genotypeFreqEstimation_path, "/data_test/results/plot_MAF_hist/MAF_hist.png")
+out_dir=paste0(genotypeFreqEstimation_path, "/data_test/results/plot_MAF_hist")
+
 # ^ .................................. ^
 
 
@@ -24,14 +27,10 @@ pkgs<-c(
   "devtools",
   "this.path",
   "vcfR",
-  "glue"
+  "glue",
+  "UpSetR"
 )
-# ,
-# ,
-# "reshape2",
-# "scales",
-# "ggplot2",
-# "multcompView"
+
 
 for (pkg in pkgs) {
   if (!requireNamespace(pkg, quietly = TRUE)) {
@@ -70,6 +69,10 @@ check_input_files(
 
 ## Import input file
 vcf <- read.vcfR(genotyping_vcf_path)
+# vcf_num <- vcf_to_numeric_matrix(
+#   vcf_path = genotyping_vcf_path,
+#   lib_names_corresp_path = lib_names_corresp_path
+# )
 
 ## Analysis
 plot_MAF_hist(
@@ -77,3 +80,29 @@ plot_MAF_hist(
   x_lim_values = c(0, 0.5), 
   out_file = output_file_name
 )
+
+
+num_matrix_to_major_minor <- function(numeric_matrix) {
+  f_ref <- rowMeans(numeric_matrix, na.rm = TRUE)
+  inv <- !is.na(f_ref) & (f_ref < 0.5)
+  numeric_matrix[inv, ] <- 1 - numeric_matrix[inv, ]
+  numeric_matrix
+}
+
+vcf_to_majmin_numeric_matrix <- function(vcf_path, lib_names_corresp_path = NULL) {
+  numeric_matrix <- vcf_to_numeric_matrix(
+    vcf_path = vcf_path,
+    lib_names_corresp_path = lib_names_corresp_path
+  )
+  majmin_num_matrix<-num_matrix_to_major_minor(numeric_matrix)
+  return(majmin_num_matrix)
+}
+vcf_num<-vcf_to_majmin_numeric_matrix(
+  vcf_path = genotyping_vcf_path,
+  lib_names_corresp_path = lib_names_corresp_path
+)
+#vcf_num <- vcf_num[rowSums(vcf_num == 0.5, na.rm = TRUE) == 0, , drop = FALSE]
+
+plot_marker_set_intersections(vcf_num)
+
+

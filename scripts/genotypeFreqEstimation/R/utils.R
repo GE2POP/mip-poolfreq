@@ -630,6 +630,37 @@ plot_MAF_hist<-function(vcf, x_lim_values, out_file = NULL){
   
 }
 
+
+#' Plot marker set intersections as an UpSet and save to PNG.
+#'
+#' @param vcf A numeric genotyping matrix (rows = SNPs, columns = samples) where 1 = homozygous for the major allele, 0 = homozygous for the minor allele. Typically produced by [vcf_to_majmin_numeric_matrix()].
+#' @param out_file Output PNG file path.
+#' @return An UpSet plot of the marker set intersections. No return value; the function is used for its side effect (plot).
+plot_marker_set_intersections <- function(numeric_matrix, out_file = NULL) {
+
+  df <- as.data.frame(numeric_matrix, stringsAsFactors = FALSE)
+  
+  if (any(!(as.numeric(unlist(df)) %in% c(0, 1)), na.rm = TRUE)) warning("Your genotyping matrix contains values other than 0/1. They will be converted to 0/1 if possible. Please check your file.", call. = FALSE)
+  
+  df[] <- lapply(df, function(x) ifelse(is.na(x), 0L, as.integer(x)))
+  
+  #if (!is.null(out_file)) { png(out_file, width = 1600, height = 1000, res = 150) }
+  
+  upset(
+    df,
+    nsets = ncol(df),
+    nintersects = 40,
+    order.by = "freq",
+    keep.order = TRUE
+  )
+  
+  # if (!is.null(out_file)) {
+  #   dev.off()
+  #   writeLines(c("", "Output file saved in:", out_file, ""))
+  # }
+}
+
+
 #' Compute estimation errors
 #'
 #' @param freqs_df Dataframe with at least an "ExpFreq" colomn (providing the expected frequencies) and an estimated frequencies column
