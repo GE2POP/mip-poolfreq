@@ -47,7 +47,7 @@ load_all(".")
 ## Parse arguments
 option_list <- list(
   make_option(c("--depth_files_list", "-d"), type = "character", help = "Path to a list of depth files"),
-  make_option(c("--hline", "-h"), type = "numeric", default = NULL, help = "Numeric value for a horizontal reference line (read depth value)"),
+  make_option(c("--hline", "-l"), type = "numeric", default = NULL, help = "Numeric value for a horizontal reference line (read depth value)"),
   make_option(c("--out_dir", "-o"), type = "character", help = "Path to output directory")
 )
 
