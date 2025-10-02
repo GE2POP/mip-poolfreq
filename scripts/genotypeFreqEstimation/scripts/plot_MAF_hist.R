@@ -48,12 +48,14 @@ load_all(".")
 ## Parse arguments
 option_list <- list(
   make_option(c("--vcf", "-v"), type = "character", help = "Path to genotyping VCF"),
+  make_option(c("--libs", "-l"), type = "character", default = NULL, help = "Path to library name correspondence file"),
   make_option(c("--out_dir", "-o"), type = "character", help = "Path to output directory")
 )
 
 opt <- parse_args(OptionParser(option_list = option_list))
 
 genotyping_vcf_path <- opt$vcf
+lib_names_corresp_path <- opt$libs
 out_dir <- opt$out_dir
 
 required_files <- list(
@@ -61,11 +63,17 @@ required_files <- list(
   out_dir = out_dir
 )
 
-check_missing_args(args = c(required_files, output_file_name = output_file_name))
+optional_files <- list(
+  libs = lib_names_corresp_path
+)
+
+check_missing_args(args = required_files)
 
 check_input_files(
-  required_files = required_files
+  required_files = required_files,
+  optional_files = optional_files
 )
+
 
 ## Import input file
 vcf <- read.vcfR(genotyping_vcf_path)
