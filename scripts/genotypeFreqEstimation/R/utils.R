@@ -671,7 +671,10 @@ plot_marker_set_intersections <- function(numeric_matrix, out_file = NULL) {
 
   df <- as.data.frame(numeric_matrix, stringsAsFactors = FALSE)
   
-  if (any(!(as.numeric(unlist(df)) %in% c(0, 1)), na.rm = TRUE)) warning("Your genotyping matrix contains values other than 0/1. They will be converted to 0/1 if possible. Please check your file.", call. = FALSE)
+  if (any(!(as.numeric(unlist(df)) %in% c(0, 1)), na.rm = TRUE)) {
+    warning(sprintf("[%s] Your genotyping matrix contains values other than 0/1. They will be converted to 0/1 if possible. Please check your file.", as.character(sys.call()[[1]])),
+            call. = FALSE)
+  }
   
   df[] <- lapply(df, function(x) ifelse(is.na(x), 0L, as.integer(x)))
   
