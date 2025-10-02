@@ -745,16 +745,26 @@ merge_depth_files <- function(depth_list) {
   merged
 }
 
+#' Clean depth file 2 first columns
+#'
+#' @param depths Read depth data frame (SNPs x samples) with CHROM and POS as first two columns.
+#'
+#' @return A cleaned read depth data frame with chrom_pos as row names and no CHROM/POS columns.
+clean_depth_file <- function(depths){
+  rownames(depths) <- paste(depths$CHROM, depths$POS, sep = "_")
+  depths <- depths[, -c(1:2)]
+  return(depths)
+}
+
 #' Plot boxplots of sequencing depth per marker
 #'
-#' @param depths Data frame of merged depths (with CHROM and POS as first two columns).
+#' @param depths Read depth data frame (SNPs x samples) with CHROM and POS as first two columns.
 #' @param hline Optional numeric value for a horizontal reference line (read depth value).
 #' @param out_file Optional path to save the plot as a PNG. If NULL, the plot is printed.
 #'
 #' @return A ggplot object (printed or saved).
-plot_mip_effect_on_depth <- function(depths, hline = NULL, out_file = NULL) {
-  rownames(depths) <- paste(depths$CHROM, depths$POS, sep = "_")
-  depths <- depths[, -c(1:2)]
+plot_depth_per_marker <- function(depths, hline = NULL, out_file = NULL) {
+  depths <- clean_depth_file(depths)
   depths <- depths[names(sort(rowMeans(depths))), ]
   
   df_long <- melt(as.matrix(depths))
@@ -782,5 +792,23 @@ plot_mip_effect_on_depth <- function(depths, hline = NULL, out_file = NULL) {
     ggsave(out_file, p, width = 10, height = 6, dpi = 300, bg = "white")
   } else {
     print(p)
+  }
+}
+
+
+#' Compute and mean depth per marker
+#'
+#' @param depths Read depth data frame (SNPs x samples) with CHROM and POS as first two columns.
+#' @param out_file Optional Path to save the output as a TSV.
+#'
+#' @return A data frame of mean depths per marker (printed or saved).
+compute_mean_depth_per_marker <- function(depths, out_file = NULL){
+  depths <- clean_depth_file(depths)
+  mean_depths<-as.data.frame(cbind(row.names(depths),round(rowMeans(depths), 2)))
+  colnames(mean_depths)<-c("CHROM_POS", "mean_depth")
+  if (! is.null(out_file)) {
+    write.table(mean_depths, out_file, row.names = FALSE, quote = F, sep ="\t")
+  } else {
+    return(mean_depths)
   }
 }

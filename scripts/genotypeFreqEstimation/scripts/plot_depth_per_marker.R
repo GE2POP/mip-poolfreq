@@ -8,9 +8,11 @@ options(error = function() {
 
 # v ... to replace with CLI params ... v
 ## Input parameters
-genotypeFreqEstimation_path="~/GitHub/mip-poolfreq/scripts/genotypeFreqEstimation"
-depth_list=paste0(genotypeFreqEstimation_path, "/data_test/data/ALL_FREQ/depth_files.list")
-hline=50
+# genotypeFreqEstimation_path="~/GitHub/mip-poolfreq/scripts/genotypeFreqEstimation"
+# depth_list=paste0(genotypeFreqEstimation_path, "/data_test/data/ALL_FREQ/depth_files.list")
+# hline=50
+# out_dir=paste0(genotypeFreqEstimation_path, "/data_test/results/plot_depth_per_marker")
+
 # ^ .................................. ^
 
 
@@ -22,6 +24,7 @@ if (!dir.exists(user_lib)) dir.create(user_lib, recursive = TRUE)
 pkgs<-c(
   "optparse",
   "devtools",
+  "glue",
   "ggplot2",
   "reshape2"
 )
@@ -52,18 +55,19 @@ opt <- parse_args(OptionParser(option_list = option_list))
 
 depth_list <- opt$depth_files_list
 hline <- opt$hline
-output_file_name <- opt$output_file
+out_dir <- opt$out_dir
 
 
 required_files <- list(
-  depth_list = depth_list
+  depth_list = depth_list,
+  out_dir = out_dir
 )
 
 optional_files <- list(
   
 )
 
-check_missing_args(args = c(required_files, output_file_name = output_file_name))
+check_missing_args(args = required_files)
 
 check_input_files(
   required_files = required_files,
@@ -75,10 +79,14 @@ depths<-merge_depth_files(
   depth_list = depth_list
 )
 
-plot_mip_effect_on_depth(
+compute_mean_depth_per_marker(
   depths=depths,
-  hline=hline,
-  out_file=output_file_name
+  out_file=glue("{out_dir}/mean_depth_per_marker.tsv")
 )
 
+plot_depth_per_marker(
+  depths=depths,
+  hline=hline,
+  out_file=glue("{out_dir}/depth_per_marker_boxplots.png")
+)
 
