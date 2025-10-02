@@ -54,7 +54,7 @@ option_list <- list(
 opt <- parse_args(OptionParser(option_list = option_list))
 
 genotyping_vcf_path <- opt$vcf
-output_file_name <- opt$output_file
+out_dir <- opt$out_dir
 
 required_files <- list(
   vcf = genotyping_vcf_path,
