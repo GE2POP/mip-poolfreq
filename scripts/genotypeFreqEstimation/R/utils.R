@@ -635,13 +635,17 @@ compare_subsampling_effect<-function(genotyping_matrix, allele_freqs, snp_depths
 #' @param x_lim_values A numeric vector of length 2 indicating the minimum and maximum x-axis limits (e.g., `c(0, 0.5)`).
 #'
 #' @return A histogram plot of the MAF distribution. No return value; the function is used for its side effect (plot).
-plot_MAF_hist<-function(vcf, x_lim_values, out_file = NULL){
+plot_MAF_hist<-function(vcf, x_lim_values, out_dir = NULL){
   min_x_lim<-x_lim_values[1]
   max_x_lim<-x_lim_values[2]
-  maf_values <- maf(vcf)
+  maf<-maf(vcf)
+  maf <- as.data.frame(cbind(row.names(maf), maf[,"Frequency"]), stringsAsFactors = F)
+  colnames(maf)<-c("CHR_POS", "MAF")
+  maf$MAF<-as.numeric(maf$MAF)
   
-  if (!is.null(out_file)){ png(out_file, width = 800, height = 600) }
-  hist(maf_values[,4],
+  
+  if (!is.null(out_dir)){ png(glue("{out_dir}/MAF_hist.png"), width = 800, height = 600) }
+  hist(maf$MAF,
        ylab = "Number of SNPs",
        xlab = "Minor Allele Frequency",
        main = "",
@@ -649,14 +653,18 @@ plot_MAF_hist<-function(vcf, x_lim_values, out_file = NULL){
        xlim = c(min_x_lim, max_x_lim),
        xaxt = "n")
   axis(1, at = seq(min_x_lim, max_x_lim, by = 0.1))
-  if (!is.null(out_file)){ 
+  if (!is.null(out_dir)){ 
     dev.off()
+    write.table(maf, glue("{out_dir}/MAFs.tsv"), row.names = FALSE, quote = F, sep ="\t")
     writeLines(c(
       "",
-      "Output file saved in:",
-      glue("{out_file}"),
+      "Output files saved in:",
+      glue("{out_dir}/MAF_hist.png"),
+      glue("{out_dir}/MAFs.tsv"),
       ""
     ))
+  } else {
+      return(maf)
     }
   
 }

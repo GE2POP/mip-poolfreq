@@ -86,7 +86,7 @@ majmin_gt_matrix<-vcf_to_majmin_num_gt_matrix(
 plot_MAF_hist(
   vcf = vcf, 
   x_lim_values = c(0, 0.5),
-  out_file = glue("{out_dir}/MAF_hist.png")
+  out_dir = out_dir
 )
 
 plot_marker_set_intersections(
