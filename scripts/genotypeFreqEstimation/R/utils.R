@@ -790,6 +790,7 @@ plot_depth_per_marker <- function(depths, hline = NULL, out_file = NULL) {
   
   if (!is.null(out_file)) {
     ggsave(out_file, p, width = 10, height = 6, dpi = 300, bg = "white")
+    writeLines(c("", "Output file saved in:", out_file, ""))
   } else {
     print(p)
   }
@@ -808,6 +809,7 @@ compute_mean_depth_per_marker <- function(depths, out_file = NULL){
   colnames(mean_depths)<-c("CHROM_POS", "mean_depth")
   if (! is.null(out_file)) {
     write.table(mean_depths, out_file, row.names = FALSE, quote = F, sep ="\t")
+    writeLines(c("", "Output file saved in:", out_file, ""))
   } else {
     return(mean_depths)
   }
