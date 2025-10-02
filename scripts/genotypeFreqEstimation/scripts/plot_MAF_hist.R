@@ -8,10 +8,10 @@ options(error = function() {
 
 # v ... to replace with CLI params ... v
 ## Input parameters
-genotypeFreqEstimation_path="~/GitHub/mip-poolfreq/scripts/genotypeFreqEstimation"
-genotyping_vcf_path=paste0(genotypeFreqEstimation_path, "/data_test/data/GENOTYPING_MATRIX/04__Genotype_Locus1_Sample_Locus2_Filtered.vcf")
-lib_names_corresp_path=paste0(genotypeFreqEstimation_path, "/data_test/data/infos_files/corresp_comp_genotypes_libnames.tsv")
-out_dir=paste0(genotypeFreqEstimation_path, "/data_test/results/plot_MAF_hist")
+# genotypeFreqEstimation_path="~/GitHub/mip-poolfreq/scripts/genotypeFreqEstimation"
+# genotyping_vcf_path=paste0(genotypeFreqEstimation_path, "/data_test/data/GENOTYPING_MATRIX/04__Genotype_Locus1_Sample_Locus2_Filtered.vcf")
+# lib_names_corresp_path=paste0(genotypeFreqEstimation_path, "/data_test/data/infos_files/corresp_comp_genotypes_libnames.tsv")
+# out_dir=paste0(genotypeFreqEstimation_path, "/data_test/results/plot_MAF_hist")
 
 # ^ .................................. ^
 
