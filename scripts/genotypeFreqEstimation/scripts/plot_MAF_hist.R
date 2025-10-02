@@ -11,7 +11,6 @@ options(error = function() {
 genotypeFreqEstimation_path="~/GitHub/mip-poolfreq/scripts/genotypeFreqEstimation"
 genotyping_vcf_path=paste0(genotypeFreqEstimation_path, "/data_test/data/GENOTYPING_MATRIX/04__Genotype_Locus1_Sample_Locus2_Filtered.vcf")
 lib_names_corresp_path=paste0(genotypeFreqEstimation_path, "/data_test/data/infos_files/corresp_comp_genotypes_libnames.tsv")
-output_file_name=paste0(genotypeFreqEstimation_path, "/data_test/results/plot_MAF_hist/MAF_hist.png")
 out_dir=paste0(genotypeFreqEstimation_path, "/data_test/results/plot_MAF_hist")
 
 # ^ .................................. ^
@@ -49,7 +48,7 @@ load_all(".")
 ## Parse arguments
 option_list <- list(
   make_option(c("--vcf", "-v"), type = "character", help = "Path to genotyping VCF"),
-  make_option(c("--output_file", "-o"), type = "character", help = "Path to output file")
+  make_option(c("--out_dir", "-o"), type = "character", help = "Path to output directory")
 )
 
 opt <- parse_args(OptionParser(option_list = option_list))
@@ -58,7 +57,8 @@ genotyping_vcf_path <- opt$vcf
 output_file_name <- opt$output_file
 
 required_files <- list(
-  vcf = genotyping_vcf_path
+  vcf = genotyping_vcf_path,
+  out_dir = out_dir
 )
 
 check_missing_args(args = c(required_files, output_file_name = output_file_name))
@@ -69,40 +69,23 @@ check_input_files(
 
 ## Import input file
 vcf <- read.vcfR(genotyping_vcf_path)
-# vcf_num <- vcf_to_numeric_matrix(
-#   vcf_path = genotyping_vcf_path,
-#   lib_names_corresp_path = lib_names_corresp_path
-# )
+majmin_gt_matrix<-vcf_to_majmin_num_gt_matrix(
+  vcf_path = genotyping_vcf_path,
+  lib_names_corresp_path = lib_names_corresp_path
+)
 
 ## Analysis
 plot_MAF_hist(
   vcf = vcf, 
-  x_lim_values = c(0, 0.5), 
-  out_file = output_file_name
+  x_lim_values = c(0, 0.5),
+  out_file = glue("{out_dir}/MAF_hist.png")
 )
 
+#majmin_gt_matrix <- majmin_gt_matrix[rowSums(majmin_gt_matrix == 0.5, na.rm = TRUE) == 0, , drop = FALSE]
 
-num_matrix_to_major_minor <- function(numeric_matrix) {
-  f_ref <- rowMeans(numeric_matrix, na.rm = TRUE)
-  inv <- !is.na(f_ref) & (f_ref < 0.5)
-  numeric_matrix[inv, ] <- 1 - numeric_matrix[inv, ]
-  numeric_matrix
-}
-
-vcf_to_majmin_numeric_matrix <- function(vcf_path, lib_names_corresp_path = NULL) {
-  numeric_matrix <- vcf_to_numeric_matrix(
-    vcf_path = vcf_path,
-    lib_names_corresp_path = lib_names_corresp_path
-  )
-  majmin_num_matrix<-num_matrix_to_major_minor(numeric_matrix)
-  return(majmin_num_matrix)
-}
-vcf_num<-vcf_to_majmin_numeric_matrix(
-  vcf_path = genotyping_vcf_path,
-  lib_names_corresp_path = lib_names_corresp_path
+plot_marker_set_intersections(
+  numeric_matrix = majmin_gt_matrix,
+  out_file = glue("{out_dir}/market_set_upsetplot.png")
 )
-#vcf_num <- vcf_num[rowSums(vcf_num == 0.5, na.rm = TRUE) == 0, , drop = FALSE]
-
-plot_marker_set_intersections(vcf_num)
 
 

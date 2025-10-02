@@ -75,6 +75,37 @@ vcf_to_numeric_matrix <- function(vcf_path, lib_names_corresp_path = NULL) {
   return(numeric_matrix)
 }
 
+#' Reorient REF/ALT-coded genotype matrix to major/minor per SNP
+#'
+#' @param numeric_matrix Numeric matrix/data.frame of genotypes (rows = SNPs, cols = samples):
+#'   1 = hom. REF, 0.5 = het, 0 = hom. ALT.
+#'
+#' @return Numeric matrix with rows reoriented to major/minor:
+#'   1 = hom. major, 0.5 = het, 0 = hom. minor.
+num_gt_matrix_to_majmin <- function(numeric_matrix) {
+  f_ref <- rowMeans(numeric_matrix, na.rm = TRUE)
+  inv <- !is.na(f_ref) & (f_ref < 0.5)
+  numeric_matrix[inv, ] <- 1 - numeric_matrix[inv, ]
+  numeric_matrix
+}
+
+#' Build a major/minor-oriented numeric genotype matrix from a VCF
+#'
+#' @param vcf_path Path to VCF file.
+#' @param lib_names_corresp_path Optional path to a two-column mapping table
+#'   (Library_name → Genotype) for renaming samples.
+#'
+#' @return Numeric genotyping matrix (SNPs x samples) oriented to major/minor:
+#'   1 = hom. major, 0.5 = het, 0 = hom. minor.
+vcf_to_majmin_num_gt_matrix <- function(vcf_path, lib_names_corresp_path = NULL) {
+  numeric_matrix <- vcf_to_numeric_matrix(
+    vcf_path = vcf_path,
+    lib_names_corresp_path = lib_names_corresp_path
+  )
+  majmin_num_matrix<-num_gt_matrix_to_majmin(numeric_matrix)
+  return(majmin_num_matrix)
+}
+
 #' Check that required columns are present in a data frame
 #'
 #' Verifies that all expected column names are present in the input data frame.
@@ -644,7 +675,7 @@ plot_marker_set_intersections <- function(numeric_matrix, out_file = NULL) {
   
   df[] <- lapply(df, function(x) ifelse(is.na(x), 0L, as.integer(x)))
   
-  #if (!is.null(out_file)) { png(out_file, width = 1600, height = 1000, res = 150) }
+  if (!is.null(out_file)) { png(out_file, width = 1600, height = 1000, res = 150) }
   
   upset(
     df,
@@ -654,10 +685,10 @@ plot_marker_set_intersections <- function(numeric_matrix, out_file = NULL) {
     keep.order = TRUE
   )
   
-  # if (!is.null(out_file)) {
-  #   dev.off()
-  #   writeLines(c("", "Output file saved in:", out_file, ""))
-  # }
+  if (!is.null(out_file)) {
+    dev.off()
+    writeLines(c("", "Output file saved in:", out_file, ""))
+  }
 }
 
 
