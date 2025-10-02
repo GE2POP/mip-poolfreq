@@ -671,22 +671,31 @@ plot_marker_set_intersections <- function(numeric_matrix, out_file = NULL) {
 
   df <- as.data.frame(numeric_matrix, stringsAsFactors = FALSE)
   
-  if (any(!(as.numeric(unlist(df)) %in% c(0, 1)), na.rm = TRUE)) {
-    warning(sprintf("[%s] Your genotyping matrix contains values other than 0/1. They will be converted to 0/1 if possible. Please check your file.", as.character(sys.call()[[1]])),
+  non_binary_rows <- apply(df, 1, function(row) {
+    vals <- suppressWarnings(as.numeric(row))
+    any(!(vals %in% c(0, 1)), na.rm = TRUE)
+  })
+  
+  nb_removed <- sum(non_binary_rows)
+  if (nb_removed > 0) {
+    warning(sprintf("[%s] Removed %d marker(s) presenting genotyping values other than 0/1.",
+                    as.character(sys.call()[[1]]), nb_removed),
             call. = FALSE)
+    df <- df[!non_binary_rows, , drop = FALSE]
   }
   
   df[] <- lapply(df, function(x) ifelse(is.na(x), 0L, as.integer(x)))
   
   if (!is.null(out_file)) { png(out_file, width = 1600, height = 1000, res = 150) }
   
-  upset(
+  p<-upset(
     df,
     nsets = ncol(df),
     nintersects = 40,
     order.by = "freq",
     keep.order = TRUE
   )
+  print(p)
   
   if (!is.null(out_file)) {
     dev.off()

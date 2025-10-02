@@ -89,11 +89,7 @@ plot_MAF_hist(
   out_file = glue("{out_dir}/MAF_hist.png")
 )
 
-#majmin_gt_matrix <- majmin_gt_matrix[rowSums(majmin_gt_matrix == 0.5, na.rm = TRUE) == 0, , drop = FALSE]
-
 plot_marker_set_intersections(
   numeric_matrix = majmin_gt_matrix,
   out_file = glue("{out_dir}/market_set_upsetplot.png")
 )
-
-
