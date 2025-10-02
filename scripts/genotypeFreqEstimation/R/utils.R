@@ -724,3 +724,63 @@ compute_errors <- function(freqs_df, out_dir = NULL, suffix = "") {
   }
   return(errors_df)
 }
+
+#' Merge multiple depth files by CHROM and POS
+#'
+#' @param depth_list Path to a text file listing depth file paths (one per line)
+#' Listed files must be read depths matrices (SNPs x samples) with CHROM and POS as first and second columns.
+#'
+#' @return A merged data.frame containing all depth files joined by CHROM and POS.
+merge_depth_files <- function(depth_list) {
+  files <- readLines(depth_list)
+  files <- files[files != ""]
+  
+  merged <- read.table(files[1], header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+  key_cols <- colnames(merged)[1:2]
+  
+  for (f in files[-1]) {
+    df <- read.table(f, header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+    merged <- merge(merged, df, by = key_cols, all = TRUE)
+  }
+  merged
+}
+
+#' Plot boxplots of sequencing depth per marker
+#'
+#' @param depths Data frame of merged depths (with CHROM and POS as first two columns).
+#' @param hline Optional numeric value for a horizontal reference line (read depth value).
+#' @param out_file Optional path to save the plot as a PNG. If NULL, the plot is printed.
+#'
+#' @return A ggplot object (printed or saved).
+plot_mip_effect_on_depth <- function(depths, hline = NULL, out_file = NULL) {
+  rownames(depths) <- paste(depths$CHROM, depths$POS, sep = "_")
+  depths <- depths[, -c(1:2)]
+  depths <- depths[names(sort(rowMeans(depths))), ]
+  
+  df_long <- melt(as.matrix(depths))
+  colnames(df_long) <- c("Marker", "Sample", "Depth")
+  
+  p <- ggplot(df_long, aes(x = Marker, y = Depth, fill = "skyblue")) +
+    geom_boxplot(outlier.size = 0.5, color="grey30", fill="skyblue") +
+    theme_minimal() +
+    theme(
+      axis.text.x = element_blank(),
+      axis.ticks.x = element_blank(),
+      panel.grid.major.x = element_blank(),
+      plot.title = element_text(hjust = 0.5)
+    ) +
+    labs(x = "Markers", y = "Depth", title = "Distribution of depth per marker")
+  
+  if (!is.null(hline)) {
+    p <- p + geom_hline(yintercept = hline, linetype = "dashed", color = "orange") +
+      annotate("text", x = -Inf, y = hline, label = hline,
+               hjust = 1.45, vjust = +0.4, color="orange", cex=3.2) +
+      coord_cartesian(clip="off")
+  }
+  
+  if (!is.null(out_file)) {
+    ggsave(out_file, p, width = 10, height = 6, dpi = 300, bg = "white")
+  } else {
+    print(p)
+  }
+}
