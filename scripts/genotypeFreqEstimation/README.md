@@ -2,7 +2,7 @@
 
 *R toolkit for estimating genotype frequencies in mixtures of known components*  
 
-The contribution of each component to every mixture is inferred from a VCF file describing the component genotypes at a set of SNPs, combined with the allele frequencies observed at the same SNPs in the mixtures, and their corresponding sequencing depths to weight the estimation. Estimated frequencies can optionally be compared with theoretical expectations.
+The contribution of each component to every mixture is inferred from a VCF file providing the component genotypes at a set of SNPs, combined with the allele frequencies observed at the same SNPs in the mixtures, and their corresponding sequencing depths to weight the estimation. In case of artificial mixtures of known proportions, estimated frequencies can be compared with theoretical expectations.
 
 ---
 
@@ -18,6 +18,8 @@ ggplot2, UpSetR, glue, scales, multcompView`
 
 ## Scripts and usage
 
+*Example input and output files are provided in the example_data/ directory to illustrate the expected formats and typical results.*
+
 ### 1. `estimate_genotype_frequencies.R`
 
 Estimate genotype frequencies per SNP based on allele frequencies and depth information.
@@ -25,8 +27,8 @@ Estimate genotype frequencies per SNP based on allele frequencies and depth info
 #### Arguments
 ```
 -v, --vcf              Components VCF file
--a, --allele_freqs     Mixtures allele frequencies TSV file (including columns CHROM, POS)
--d, --depths           Mixtures depth per SNP TSV file (including columns CHROM, POS)
+-a, --allele_freqs     Mixture allele frequencies TSV file (including columns CHROM, POS)
+-d, --depths           Mixture depths per SNP TSV file (including columns CHROM, POS)
 -l, --libs             Library name correspondence TSV file *(optional)*
 -o, --output_file      Genotype frequencies output TSV file
 ```
@@ -34,15 +36,16 @@ Estimate genotype frequencies per SNP based on allele frequencies and depth info
 #### Example
 ```
 Rscript scripts/estimate_genotype_frequencies.R \
-  -v data/genotypes.vcf \
-  -a data/allele_freqs.tsv \
-  -d data/depths.tsv \
-  -l data/libnames.tsv \
-  -o results/genotype_frequencies.tsv
+  -v example_data/input_files/comp_genotypes.vcf \
+  -a example_data/input_files/mix_ref_all_freqs.tsv \
+  -d example_data/input_files/mix_read_depths.tsv \
+  -l example_data/input_files/comp_libnames_corresp.tsv \
+  -o genotype_frequencies.tsv
 ```
 
-#### Output: `genotype_frequencies.tsv`
-Contains the **estimated genotype frequencies** of each component within each mixture.
+#### Output 
+• `genotype_frequencies.tsv`  
+**Estimated genotype frequencies** of each component within each mixture.
 Each row corresponds to one **component–mixture** pair, with the estimated frequency of that component in the mixture.
 ```text
 Component	Mixture	EstFreq
@@ -60,39 +63,86 @@ EL4X_482	Tm1313	0.348394182207116
 
 ### 2. `compare_with_expected_frequencies.R`
 
-Compare estimated genotype frequencies to expected values and compute bias, variance, and correlation metrics.
+*Compare estimated genotype frequencies to expected values and compute bias, variance, and correlation metrics.*  
+
+This script is intended for test datasets composed of **artificial mixtures with known proportions**, where expected genotype frequencies are available for direct comparison with the estimated values.
+
+Three complementary analyses will be performed:
+
+1. **Direct comparison between expected and estimated frequencies**  
+Estimated genotype frequencies in mixtures are compared to their expected values.
+In addition to estimating genotype frequencies in real mixtures, the same procedure can optionnally be applied to the component libraries themselves, treated as if they were mixtures (thereafter referred to as “component mixtures”). To include them, the user must provide the corresponding `--allele_freqs_comp`, `--depths_comp`, and `--exp_freqs_comp` files. This can serve as a control to verify that the estimation correctly returns a frequency of 1 for the corresponding component and 0 for the others.
+
+2. **Effect of weighting in the regression model**  
+The regression model used to estimate genotype frequencies can include a weight vector to assign more importance to certain observations (i. e. allele frequencies) than others.  
+In our implementation, SNP read depths are used as the weight vector when estimating genotype frequencies in a given mixture. This allows to give greater influence to SNPs with higher sequencing depth, as these are expected to provide more reliable allele frequency estimates.  
+This analysis compares results obtained with and without read depth weighting.  
+*Component mixtures are not included in this analysis.*
+
+3. **Effect of reducing the number of SNPs used for estimation**    
+To evaluate how decreasing the number of SNPs impacts estimation accuracy, SNPs are gradually subsampled in steps of 50, and genotype frequencies are estimated for each subset.  
+*Component mixtures are not included in this analysis.*
 
 #### Arguments
 ```
 -v, --vcf                      Components VCF file
---allele_freqs_mix             Mixtures allele frequencies TSV file
---depths_mix                   Mixtures depth per SNP TSV file (including columns CHROM, POS)
---exp_freqs_mix                Mixtures expected genotype frequencies TSV file
---allele_freqs_comp            Components allele frequencies TSV file *(optional)*
---depths_comp                  Components depth per SNP TSV file (including columns CHROM, POS) *(optional)*
---exp_freqs_comp               Components expected genotype frequencies TSV file *(optional)*
+--allele_freqs_mix             Mixture allele frequencies TSV file
+--depths_mix                   Mixture depths per SNP TSV file (including columns CHROM, POS)
+--exp_freqs_mix                Mixture expected genotype frequencies TSV file
+--allele_freqs_comp            Component allele frequencies TSV file *(optional)*
+--depths_comp                  Component depths per SNP TSV file (including columns CHROM, POS) *(optional)*
+--exp_freqs_comp               Component expected genotype frequencies TSV file *(optional)*
 -l, --libs                     Library name correspondence TSV file *(optional)*
 -o, --out_dir                  Output directory
 ```
 
 #### Example
-```
+``` 
 Rscript scripts/compare_with_expected_frequencies.R \
-  -v data/genotypes.vcf \
-  --allele_freqs_mix data/ALL_FREQ/27MIXTURES/ref_allelic_freqs.tsv \
-  --depths_mix data/ALL_FREQ/27MIXTURES/total_depths.tsv \
-  --exp_freqs_mix data/infos/expectedGenoFreqs_mixtures.tsv \
-  --allele_freqs_comp data/ALL_FREQ/4COMPONENTS/ref_allelic_freqs.tsv \
-  --depths_comp data/ALL_FREQ/4COMPONENTS/total_depths.tsv \
-  --exp_freqs_comp data/infos/expectedGenoFreqs_components.tsv \
-  -l data/infos/corresp_comp_genotypes_libnames.tsv \
-  -o results/compare_with_expected_frequencies
+  -v example_data/input_files/comp_genotypes.vcf \
+  --allele_freqs_mix example_data/input_files/mix_ref_all_freqs.tsv \
+  --depths_mix example_data/input_files/mix_read_depths.tsv \
+  --exp_freqs_mix example_data/input_files/mix_exp_geno_freqs.tsv \
+  --allele_freqs_comp example_data/input_files/comp_ref_all_freqs.tsv \
+  --depths_comp example_data/input_files/comp_read_depths.tsv \
+  --exp_freqs_comp example_data/input_files/comp_exp_geno_freqs.tsv \
+  -l example_data/input_files/comp_libnames_corresp.tsv \
+  -o .
 ```
 
 #### Outputs
-•	general/ — bias and correlation summary tables and plots (correlations.tsv, bias_summary.tsv, freq_comparison_scatter.png, genotype_bias_boxplot.png).  
-•	weight_vector_effect/ — analysis of weight effects (weight_vs_bias.png, stats.tsv).  
-•	snp_subsampling_effect/ — analysis of SNP subsampling impact (subsampling_correlation.png, subsampling_variance.tsv).  
+<img width="403" height="459" alt="image" src="https://github.com/user-attachments/assets/a9bae9bf-8543-42a1-9b79-0434adf38e3d" />
+
+- **`expected_vs_estimated` folder:**  
+*Comparison analysis of estimated vs expected genotype frequencies*
+  - `est_geno_freqs_mixtures.tsv`: estimated genotype frequencies in mixtures
+  - `est_geno_freqs_components.tsv`: estimated genotype frequencies in components
+  - tables reporting mean and standard deviation of estimated frequencies (in mixtures) per expected value
+  - tables of estimated biases (mean errors) per component and per expected frequency, with corresponding error boxplots
+  - scatter plot of estimated vs expected genotype frequencies; each dot represents the frequency of one component in a mixture. Frequencies estimated in component mixtures (i.e. component libraries treated as mixtures for validation) are shown in grey and are excluded from the regression fitting
+<p align="center">
+  <img width="532" height="388" alt="image" src="https://github.com/user-attachments/assets/5073bff6-db9e-4e2f-ade4-144c40e3982a" />
+</p>
+
+- **`weight_vector_effect` folder:**  
+*Analysis of the effect of using read depth as a weight in the estimation model*
+  - tables reporting mean and standard deviation of estimated frequencies (in mixtures) per expected value, computed with or without using read depth as weight
+  - tables of estimated biases (mean errors) per component and per expected frequency, with corresponding error boxplots, with or without using read depth as weight
+  - scatter plot of estimated vs expected genotype frequencies, with or without using read depth as weight
+  - `est_geno_freqs_boxplot_weight_effect.png`: boxplots of estimated values per expected frequency, with or without using read depth as weight
+<p align="center">
+  <img width="616" height="463" alt="image" src="https://github.com/user-attachments/assets/f7575565-95ef-49f9-ae8d-f430c699c440" />
+</p>
+
+- **`snp_subsampling_effect` folder:**  
+*Analysis of the effect of gradually reducing the number of SNPs through random subsampling on genotype frequency estimation*
+  - tables reporting mean and standard deviation of estimated frequencies (in mixtures) per expected value, computed for each random SNP subset
+  - tables of estimated biases (mean errors) per component and per expected frequency, with corresponding error boxplots, for each random SNP subset
+  - scatter plot of estimated vs expected genotype frequencies, for each random SNP subset
+  - `est_geno_freqs_boxplot_subsampling_effect.png`: boxplots of estimated values per expected frequency, for each random SNP subset
+<p align="center">
+  <img width="677" height="507" alt="image" src="https://github.com/user-attachments/assets/6d89de73-2311-472d-86dc-147aab1c8adf" />
+</p>
 
 
 ### 3. `plot_MAF_hist.R`
@@ -108,19 +158,23 @@ Compute Minor Allele Frequency (MAF) values from a VCF file and plot their distr
 #### Example
 ```
 Rscript scripts/plot_MAF_hist.R \
-  -v data/genotypes.vcf \
-  -l data/infos/corresp_comp_genotypes_libnames.tsv \
-  -o results/plot_MAF_hist
+  -v example_data/input_files/comp_genotypes.vcf \
+  -l example_data/input_files/comp_libnames_corresp.tsv \
+  -o .
 ```
 
 #### Outputs
-•	MAF_hist.png — histogram of MAF values.  
-•	MAFs.tsv — table of MAF values.  
-•	marker_set_upsetplot.png — UpSet plot showing the number of SNPs are shared or unique among the components.
+- `MAF_hist.png`: histogram of MAF values.  
+- `MAFs.tsv`: table of MAF values.  
+- `marker_set_upsetplot.png`: UpSet plot showing the number of shared or unique SNPs among the components. **Only loci that are homozygous in every component are included.** For example, in the plot below, the first vertical bar indicates that GQ4X-83 carries a different homozygous allele than the other three components at 33 SNPs.
+<p align="center">
+  <img width="794" height="497" alt="image" src="https://github.com/user-attachments/assets/10195c83-bd6f-4837-96f8-75b0a5a2176f" />
+</p>
+
 
 
 ### 4. `plot_depth_per_marker.R`
-Visualize boxplots of read depth distributions per SNP.
+Plot read depth distribution (boxplots) per SNP.
 
 #### Arguments
 ```
@@ -132,15 +186,17 @@ Visualize boxplots of read depth distributions per SNP.
 #### Example
 ```
 Rscript scripts/plot_depth_per_marker.R \
-  -d data/ALL_FREQ/depth_files.list \
+  -d example_data/input_files/depth_files.list \
   -l 50 \
-  -o results/plot_depth_per_marker
+  -o .
 ```
 
 #### Outputs
-•	mean_depth_per_marker.tsv — mean read depth per SNP across samples.
-•	depth_per_marker_boxplots.png — boxplot of depth distributions, with optional horizontal reference line.
-
+- `mean_depth_per_marker.tsv`: mean read depth per SNP across samples.
+- `depth_per_marker_boxplots.png`: boxplot of depth distributions, with optional horizontal reference line.
+<p align="center">
+  <img width="871" height="482" alt="image" src="https://github.com/user-attachments/assets/7c331c4b-c744-4a04-b347-ffb7961872f1" />
+</p>
 
 ---
 
@@ -163,7 +219,7 @@ Used to estimate genotype frequencies from observed allele proportions.
 |---------|-------------|
 | `CHROM` | Chromosome or contig name |
 | `POS` | SNP position |
-| One column per mixture | Allele frequency of the REF allele in each mixture |
+| One column per mixture | Allele frequency of the REF allele at this SNP in each mixture |
 
 
 ### • Read depth file (`--depths`)
