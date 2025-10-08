@@ -111,7 +111,7 @@ Rscript scripts/compare_with_expected_frequencies.R \
 ```
 
 #### Outputs
-<img width="403" height="459" alt="image" src="https://github.com/user-attachments/assets/a9bae9bf-8543-42a1-9b79-0434adf38e3d" />
+<img width="460" height="493" alt="image" src="https://github.com/user-attachments/assets/b1502585-e0ba-4367-904b-575f90e5d9a3" />
 
 - **`expected_vs_estimated` folder:**  
 *Comparison analysis of estimated vs expected genotype frequencies*
