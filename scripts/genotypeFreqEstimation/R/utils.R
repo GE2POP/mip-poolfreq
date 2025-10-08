@@ -177,7 +177,7 @@ estimate_genotype_freqs <- function(genotyping_matrix, allele_freqs, snp_depths 
   for (mixture_name in colnames(allele_freqs)) {
     weights <- if (!is.null(snp_depths)) snp_depths[, mixture_name] else NULL
     est_freqs <- coefficients(lm(allele_freqs[, mixture_name] ~ genotyping_matrix - 1, weights = weights))
-    genotype_freqs[, mixture_name] <- est_freqs
+    genotype_freqs[, mixture_name] <- round(est_freqs, 4)
   }
   
   genotype_freqs$Component <- rownames(genotype_freqs)
@@ -285,12 +285,15 @@ compare_boxplots_est_freq <- function(freqs_df, variable_name, out_file = NULL) 
 compute_stats_per_exp_freq <- function(freqs_df, out_dir = NULL, suffix = "") {
   output <- list()
   df_melt <- melt(freqs_df[, -c(1:2)], id.vars = "ExpFreq")
-  mean_df <- aggregate(value ~ ExpFreq + variable, data = df_melt, mean)
-  sd_df <- aggregate(value ~ ExpFreq + variable, data = df_melt, sd)
+  mean_df <- aggregate(value ~ ExpFreq + variable, data = df_melt, function(x) round(mean(x), 4))
+  sd_df   <- aggregate(value ~ ExpFreq + variable, data = df_melt, function(x) round(sd(x), 4))
+
   output$mean <- dcast(mean_df, ExpFreq ~ variable)
   output$sd <- dcast(sd_df, ExpFreq ~ variable)
-  
+
   if (! is.null(out_dir)){
+    names(output$mean)[-1] <- paste0(names(output$mean)[-1], "_mean")
+    names(output$sd)[-1] <- paste0(names(output$sd)[-1], "_SD")
     write.table(output$mean, glue("{out_dir}/est_geno_freqs_mean{suffix}.tsv"), row.names = FALSE, quote = F, sep ="\t")
     write.table(output$sd, glue("{out_dir}/est_geno_freqs_sd{suffix}.tsv"), row.names = FALSE, quote = F, sep ="\t")
   }
@@ -349,8 +352,10 @@ compute_bias_from_errors <- function(freqs_df, error_col, condition) {
   formula_comp <- as.formula(glue("{error_col} ~ Component"))
   formula_exp  <- as.formula(glue("{error_col} ~ ExpFreq"))
   
-  comp_mean <- aggregate(formula_comp, freqs_df, mean)
-  expf_mean <- aggregate(formula_exp, freqs_df, mean)
+  # comp_mean <- aggregate(formula_comp, freqs_df, mean)
+  # expf_mean <- aggregate(formula_exp, freqs_df, mean)
+  comp_mean <- aggregate(formula_comp, freqs_df, function(x) round(mean(x), 4))
+  expf_mean <- aggregate(formula_exp, freqs_df, function(x) round(mean(x), 4))
   
   aov_res <- aov(formula_comp, freqs_df)
   tukey_res <- TukeyHSD(aov_res)
@@ -376,7 +381,7 @@ compute_bias_from_errors <- function(freqs_df, error_col, condition) {
 #' @param suffix Optional suffix to append to output file names (default = "")
 #'
 #' @return NULL. Plots are printed if no output directory is given.
-plot_bias_boxplots <- function(
+plot_error_boxplots <- function(
     errors_long_df,
     variable_name,
     out_dir = NULL,
@@ -403,8 +408,8 @@ plot_bias_boxplots <- function(
   )
   
   if (!is.null(out_dir)) {
-    ggsave(glue("{out_dir}/bias_by_component{suffix}.png"), p_component, width = 8, height = 6, dpi = 300, bg = "white")
-    ggsave(glue("{out_dir}/bias_by_exp_freq{suffix}.png"), p_expfreq, width = 8, height = 6, dpi = 300, bg = "white")
+    ggsave(glue("{out_dir}/error_by_component{suffix}.png"), p_component, width = 8, height = 6, dpi = 300, bg = "white")
+    ggsave(glue("{out_dir}/error_by_exp_freq{suffix}.png"), p_expfreq, width = 8, height = 6, dpi = 300, bg = "white")
   } else {
     print(p_component)
     print(p_expfreq)
@@ -445,7 +450,7 @@ compute_bias <- function(freqs_df, variable_name = "", out_dir = NULL, suffix = 
     ) %>%
     dplyr::mutate(Condition = factor(Condition, levels = est_freq_cols))
   
-  plot_bias_boxplots(errors_long_df, variable_name, out_dir, suffix)
+  plot_error_boxplots(errors_long_df, variable_name, out_dir, suffix)
   
   if (! is.null(out_dir)) {
     write.table(components_bias, glue("{out_dir}/bias_per_component{suffix}.tsv"), row.names = FALSE, quote = F, sep ="\t")
@@ -488,7 +493,7 @@ compare_different_est_freqs<-function(freqs_to_compare, variable_name, out_dir, 
   
   plot_correlation_with_exp_freq(
     freqs_df = freqs_to_compare,
-    out_file = glue("{out_dir}/correlation_plot{suffix}.pdf")
+    out_file = glue("{out_dir}/est_exp_freqs_scatterplot{suffix}.pdf")
   )
   
   bias <- compute_bias(
@@ -530,7 +535,7 @@ compare_weight_vector_effect<-function(genotyping_matrix, allele_freqs, snp_dept
     snp_depths = snp_depths,
     expected_freqs_melt = expected_freqs_melt,
     est_freq_col_name = "read_depth"
-    )
+  )
   freqs_no_weight<-estimate_genotype_freqs(
     genotyping_matrix = genotyping_matrix,
     allele_freqs = allele_freqs,

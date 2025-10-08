@@ -1,0 +1,5 @@
+Component	bias_50_SNPs	50_SNPs_significance_group	bias_100_SNPs	100_SNPs_significance_group	bias_150_SNPs	150_SNPs_significance_group	bias_200_SNPs	200_SNPs_significance_group	bias_246_SNPs	246_SNPs_significance_group
+EL4X_199	-0.0297	c	0.0019	b	0.0075	b	-0.01	c	-0.0078	c
+EL4X_35	0.0423	a	0.0279	a	0.0458	a	0.0414	a	0.0375	a
+EL4X_482	0.0167	b	0.0028	b	-0.0062	c	0.0107	b	0.0089	b
+GQ4X_83	0.0106	b	0.0015	b	-0.0033	bc	-0.0013	bc	-0.0035	bc

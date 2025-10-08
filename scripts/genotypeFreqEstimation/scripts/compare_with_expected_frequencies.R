@@ -132,7 +132,7 @@ if (!is.null(allele_freqs_components_path)){
 ## Analysis
 
 # Create output sub-directories
-general_subdir<-glue("{out_dir}/general")
+general_subdir<-glue("{out_dir}/expected_vs_estimated")
 weights_subdir<-glue("{out_dir}/weight_vector_effect")
 subsampling_subdir<-glue("{out_dir}/snp_subsampling_effect")
 
