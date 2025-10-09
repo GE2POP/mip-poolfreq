@@ -71,17 +71,17 @@ Three complementary analyses will be performed:
 
 1. **Direct comparison between expected and estimated frequencies**  
 Estimated genotype frequencies in mixtures are compared to their expected values.
-In addition to estimating genotype frequencies in real mixtures, the same procedure can optionnally be applied to the component libraries themselves, treated as if they were mixtures (thereafter referred to as “component mixtures”). To include them, the user must provide the corresponding `--allele_freqs_comp`, `--depths_comp`, and `--exp_freqs_comp` files. This can serve as a control to verify that the estimation correctly returns a frequency of 1 for the corresponding component and 0 for the others.
+In addition to estimating genotype frequencies in real mixtures, the same procedure can optionally be applied to the component libraries themselves, treated as if they were mixtures (thereafter referred to as “one-component mixtures”). To include them, the user must provide the components input files through the optional arguments --allele_freqs_comp, --depths_comp, and --exp_freqs_comp. This can serve as a control to verify that the estimation correctly returns a frequency of 1 for the corresponding component and 0 for the others.
 
-2. **Effect of weighting in the regression model**  
+3. **Effect of weighting in the regression model**  
 The regression model used to estimate genotype frequencies can include a weight vector to assign more importance to certain observations (i. e. allele frequencies) than others.  
 In our implementation, SNP read depths are used as the weight vector when estimating genotype frequencies in a given mixture. This allows to give greater influence to SNPs with higher sequencing depth, as these are expected to provide more reliable allele frequency estimates.  
 This analysis compares results obtained with and without read depth weighting.  
-*Component mixtures are not included in this analysis.*
+*One-component mixtures are not included in this analysis.*
 
-3. **Effect of reducing the number of SNPs used for estimation**    
+4. **Effect of reducing the number of SNPs used for estimation**    
 To evaluate how decreasing the number of SNPs impacts estimation accuracy, SNPs are gradually subsampled in steps of 50, and genotype frequencies are estimated for each subset.  
-*Component mixtures are not included in this analysis.*
+*One-component mixtures are not included in this analysis.*
 
 #### Arguments
 ```
@@ -119,7 +119,7 @@ Rscript scripts/compare_with_expected_frequencies.R \
   - `est_geno_freqs_components.tsv`: estimated genotype frequencies in components
   - tables reporting mean and standard deviation of estimated frequencies (in mixtures) per expected value
   - tables of estimated biases (mean errors) per component and per expected frequency, with corresponding error boxplots
-  - scatter plot of estimated vs expected genotype frequencies; each dot represents the frequency of one component in a mixture. Frequencies estimated in component mixtures (i.e. component libraries treated as mixtures for validation) are shown in grey and are excluded from the regression fitting
+  - scatter plot of estimated vs expected genotype frequencies; each dot represents the frequency of one component in a mixture. If --allele_freqs_comp, --depths_comp and --exp_freqs_comp were provided, frequencies estimated in one-component mixtures (i.e. component libraries treated as mixtures for validation) are shown in grey and are excluded from the regression fitting.
 <p align="center">
   <img width="532" height="388" alt="image" src="https://github.com/user-attachments/assets/5073bff6-db9e-4e2f-ade4-144c40e3982a" />
 </p>
