@@ -153,6 +153,180 @@ melt_genotype_freqs<-function(genotype_freqs, freq_col_name){
   return(genotype_freqs_melt)
 }
 
+#' Filter SNPs based on minimum sequencing depth
+#'
+#' This function removes SNPs (rows) whose minimum sequencing depth across samples
+#' is below a specified threshold (`min_depth`). It applies the same filtering
+#' to both the main depth matrix and any additional data frames provided.
+#'
+#' @param depths Read depths data.frame (SNPs x sample). Row names must correspond to SNP identifiers.
+#' @param extra_files Either a single data.frame or a list of data.frames containing
+#'   additional SNP-related information (e.g. allele frequencies) with the same
+#'   row names as `depths`.
+#' @param min_depth Minimum read depth threshold (numeric value). SNPs with at least one sample showing a depth < threshold in the depths data.frame we be removed.
+#'
+#' @return A list of filtered data.frames, starting with the filtered `depths`
+#'   followed by the filtered elements of `extra_files`, in the same order.
+#'
+filter_lowdepth_snps<-function(depths, extra_files, min_depth){
+  if (is.data.frame(extra_files)) {
+    extra_files <- list(extra_files)
+  }
+  
+  snp_to_filter<-rownames(depths)[apply(depths, 1, min) < min_depth]
+  n_filtered <- length(snp_to_filter)
+  
+  filtered_dfs <- lapply(c(list(depths), extra_files), function(df) {
+    df[!rownames(df) %in% snp_to_filter, ]
+  })
+  
+  if (n_filtered == 0) {
+    writeLines(sprintf("No SNPs filtered (all depths ≥ %d).", min_depth))
+  } else {
+    writeLines(sprintf("\n\nINFO: Filtered %d SNPs with min depth < %d.", n_filtered, min_depth))
+  }
+  
+  return(filtered_dfs)
+}
+
+#' Check that multiple SNP tables share identical SNP sets
+#'
+#' @param dfs [list] A list of data frames or matrices to check. Each element
+#'   must have rownames corresponding to SNP identifiers (e.g.: all_freqs or read_depths dataframes)
+#' @param context [character] Optional string describing the context of the check
+#'
+#' @return Invisibly returns `TRUE` if all tables contain identical SNP sets.
+#'   Stops execution with an error message if any mismatch is detected.
+check_identical_snps <- function(dfs, context = NULL) {
+  rn_list <- lapply(dfs, rownames)
+  
+  ref <- rn_list[[1]]
+  for (i in seq_along(rn_list)[-1]) {
+    if (!setequal(ref, rn_list[[i]])) {
+      stop(paste0(
+        "Mismatch between SNPs detected among input files",
+        if (!is.null(context)) paste0(" (", context, ")"), "."
+      ))
+    }
+  }
+  
+  invisible(TRUE)
+}
+
+#' Load and format all input data for genotype frequency estimation.
+#'
+#' This function imports, formats, and filters input data for genotype frequency
+#' estimation from mixtures (and optionally from component libraries).
+#' It reads the genotyping matrix from a VCF file, loads allele frequency and
+#' depth tables, optionally processes expected frequencies, and applies SNP
+#' filtering based on a minimum depth threshold.
+#'
+#' The function automatically adapts to the presence or absence of component
+#' input files and expected frequency tables. It returns a named list containing
+#' the formatted data, ready to be passed to downstream estimation functions.
+#'
+#' @param genotyping_vcf_path [character] Path to the VCF file used to build the genotyping matrix.
+#' @param lib_names_corresp_path [character] Path to the correspondence table mapping library names to samples.
+#' @param allele_freqs_mixtures_path [character] Path to the allele frequency table for mixtures.
+#' @param snp_depths_mixtures_path [character] Path to the SNP depth table for mixtures.
+#' @param expected_freqs_mixtures_path [character|NULL] Optional path to the expected genotype frequencies for mixtures.
+#' @param allele_freqs_components_path [character|NULL] Optional path to the allele frequency table for component libraries.
+#' @param snp_depths_components_path [character|NULL] Optional path to the SNP depth table for component libraries.
+#' @param expected_freqs_components_path [character|NULL] Optional path to the expected genotype frequencies for component libraries.
+#' @param min_depth [numeric] Minimum SNP depth threshold used for filtering.
+#'
+#' @return A named list containing the following elements:
+#'   - `genotyping_matrix`: numeric matrix built from the VCF file.
+#'   - `allele_freqs_mixtures`: formatted allele frequency table for mixtures.
+#'   - `snp_depths_mixtures`: formatted SNP depth table for mixtures.
+#'   - `expected_freqs_mixtures_melt`: melted expected genotype frequencies for mixtures (if provided).
+#'   - `allele_freqs_components`: formatted allele frequency table for components (if provided).
+#'   - `snp_depths_components`: formatted SNP depth table for components (if provided).
+#'   - `expected_freqs_components_melt`: melted expected genotype frequencies for components (if provided).
+load_inputs <- function(
+    genotyping_vcf_path,
+    lib_names_corresp_path,
+    allele_freqs_mixtures_path,
+    snp_depths_mixtures_path,
+    expected_freqs_mixtures_path = NULL,
+    allele_freqs_components_path = NULL,
+    snp_depths_components_path = NULL,
+    expected_freqs_components_path = NULL,
+    min_depth = 0
+) {
+  genotyping_matrix <- vcf_to_numeric_matrix(
+    vcf_path = genotyping_vcf_path,
+    lib_names_corresp_path = lib_names_corresp_path
+  )
+  
+  allele_freqs_mixtures <- read.table(allele_freqs_mixtures_path, header = TRUE)
+  snp_depths_mixtures <- read.table(snp_depths_mixtures_path, header = TRUE)
+  
+  allele_freqs_mixtures <- set_rownames_from_chrom_pos(allele_freqs_mixtures)
+  snp_depths_mixtures <- set_rownames_from_chrom_pos(snp_depths_mixtures)
+  
+  check_identical_snps(dfs=list(allele_freqs_mixtures, snp_depths_mixtures), context = "between mixtures all_freqs and read_depths")
+  
+  expected_freqs_mixtures_melt <- NULL
+  if (!is.null(expected_freqs_mixtures_path)) {
+    expected_freqs_mixtures <- read.table(expected_freqs_mixtures_path, header = TRUE)
+    expected_freqs_mixtures_melt <- melt_genotype_freqs(expected_freqs_mixtures, "ExpFreq")
+  }
+  
+  allele_freqs_components <- NULL
+  snp_depths_components <- NULL
+  expected_freqs_components_melt <- NULL
+  
+  if (!is.null(allele_freqs_components_path)) {
+    allele_freqs_components <- read.table(allele_freqs_components_path, header = TRUE)
+    snp_depths_components <- read.table(snp_depths_components_path, header = TRUE)
+    
+    allele_freqs_components <- set_rownames_from_chrom_pos(allele_freqs_components)
+    snp_depths_components <- set_rownames_from_chrom_pos(snp_depths_components)
+    
+    check_identical_snps(dfs=list(allele_freqs_components, snp_depths_components), context = "between components all_freqs and read_depths")
+    check_identical_snps(dfs=list(allele_freqs_components, allele_freqs_mixtures), context = "between components and mixtures all_freqs")
+    
+    
+    if (!is.null(expected_freqs_components_path)) {
+      expected_freqs_components <- read.table(expected_freqs_components_path, header = TRUE)
+      expected_freqs_components_melt <- melt_genotype_freqs(expected_freqs_components, "ExpFreq")
+    }
+    
+    c(
+      snp_depths_mixtures,
+      allele_freqs_mixtures,
+      snp_depths_components,
+      allele_freqs_components
+    ) %<-% filter_lowdepth_snps(
+      depths = snp_depths_mixtures,
+      extra_files = list(
+        allele_freqs_mixtures,
+        snp_depths_components,
+        allele_freqs_components
+      ),
+      min_depth = min_depth
+    )
+  } else {
+    c(snp_depths_mixtures, allele_freqs_mixtures) %<-% filter_lowdepth_snps(
+      depths = snp_depths_mixtures,
+      extra_files = allele_freqs_mixtures,
+      min_depth = min_depth
+    )
+  }
+  
+  return(list(
+    genotyping_matrix = genotyping_matrix,
+    allele_freqs_mixtures = allele_freqs_mixtures,
+    snp_depths_mixtures = snp_depths_mixtures,
+    expected_freqs_mixtures_melt = expected_freqs_mixtures_melt,
+    allele_freqs_components = allele_freqs_components,
+    snp_depths_components = snp_depths_components,
+    expected_freqs_components_melt = expected_freqs_components_melt
+  ))
+}
+
+
 # ----
 
 #' Estimate genotype frequencies from genotyping matrix and allele frequencies
@@ -171,9 +345,18 @@ estimate_genotype_freqs <- function(genotyping_matrix, allele_freqs, snp_depths 
   colnames(genotype_freqs) <- colnames(allele_freqs)
   rownames(genotype_freqs) <- colnames(genotyping_matrix)
   
-  allele_freqs <- allele_freqs[rownames(genotyping_matrix),]
-  snp_depths <- if (!is.null(snp_depths)) snp_depths[rownames(genotyping_matrix),] else NULL
+  if (!is.null(snp_depths) && !setequal(rownames(allele_freqs), rownames(snp_depths))) {
+    stop("Mismatch between SNPs in allele_freqs and snp_depths - they must be identical.")
+  }
+
+  common_snps <- intersect(rownames(genotyping_matrix), rownames(allele_freqs))
   
+  writeLines(sprintf("\nINFO: Estimating genotype frequencies with %d SNPs.", length(common_snps)))
+
+  allele_freqs <- allele_freqs[common_snps,]
+  genotyping_matrix <- genotyping_matrix[common_snps,]
+  snp_depths <- if (!is.null(snp_depths)) snp_depths[common_snps,] else NULL
+
   for (mixture_name in colnames(allele_freqs)) {
     weights <- if (!is.null(snp_depths)) snp_depths[, mixture_name] else NULL
     est_freqs <- coefficients(lm(allele_freqs[, mixture_name] ~ genotyping_matrix - 1, weights = weights))
@@ -563,14 +746,18 @@ compare_weight_vector_effect<-function(genotyping_matrix, allele_freqs, snp_dept
 #' @param expected_freqs_melt Melted dataframe of expected genotype frequencies (default = NULL)
 #' @return Dataframe of estimated frequencies per condition
 estimate_geno_freqs_snps_subsampling <- function(genotyping_matrix, allele_freqs, step_size, snp_depths = NULL, expected_freqs_melt = NULL) {
-  total_nb_snps<-dim(genotyping_matrix)[1]
+  
+  common_snps <- intersect(rownames(genotyping_matrix), rownames(allele_freqs))
+  total_nb_snps <- length(common_snps)
   nb_snps_to_sample<-unique(c(seq(step_size, total_nb_snps, by = step_size), total_nb_snps))
   
   subsampled_genotype_freqs <- data.frame(Mixture = colnames(allele_freqs))
   
+  
+  
   for (nb_snps in nb_snps_to_sample) {
     condition <- glue("{nb_snps}_SNPs")
-    snps <- rownames(genotyping_matrix)[sample(nrow(genotyping_matrix), nb_snps)]
+    snps <- sample(common_snps, nb_snps)
     if (! is.null(snp_depths)){
       snp_depths_subset<-snp_depths[snps,]
     } else {

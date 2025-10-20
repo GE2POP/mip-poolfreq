@@ -8,16 +8,29 @@ options(error = function() {
 
 # v ... to replace with CLI params ... v
 ## Input parameters
-# genotypeFreqEstimation_path="~/MIPs/PUBLI/03_scripts/genotypeFreqEstimation"
-# genotyping_vcf_path=paste0(genotypeFreqEstimation_path, "/tests/data/GENOTYPING_MATRIX/04__Genotype_Locus1_Sample_Locus2_Filtered.vcf")
-# allele_freqs_mixtures_path=paste0(genotypeFreqEstimation_path, "/tests/data/ALL_FREQ/27MIXTURES/ref_allelic_freqs_27mixtures_246SNPs.tsv")
-# snp_depths_mixtures_path=paste0(genotypeFreqEstimation_path, "/tests/data/ALL_FREQ/27MIXTURES/total_depths_27mixtures_246SNPs.tsv")
-# expected_freqs_mixtures_path=paste0(genotypeFreqEstimation_path, "/tests/data/infos_files/expectedGenoFreqs_mixtures.tsv")
-# allele_freqs_components_path=paste0(genotypeFreqEstimation_path, "/tests/data/ALL_FREQ/4COMPONENTS/ref_allelic_freqs_4components_246SNPs.tsv")
-# snp_depths_components_path=paste0(genotypeFreqEstimation_path, "/tests/data/ALL_FREQ/4COMPONENTS/total_depths_4components_246SNPs.tsv")
-# expected_freqs_components_path=paste0(genotypeFreqEstimation_path, "/tests/data/infos_files/expectedGenoFreqs_components.tsv")
-# lib_names_corresp_path=paste0(genotypeFreqEstimation_path, "/tests/data/infos_files/corresp_comp_genotypes_libnames.tsv")
-# out_dir=paste0(genotypeFreqEstimation_path, "/tests/results/compare_with_expected_frequencies")
+# genotypeFreqEstimation_path="~/GitHub/mip-poolfreq/scripts/genotypeFreqEstimation/example_data/input_files"
+# genotyping_vcf_path=paste0(genotypeFreqEstimation_path, "/comp_genotypes.vcf")
+# allele_freqs_mixtures_path=paste0(genotypeFreqEstimation_path, "/mix_ref_all_freqs.tsv")
+# snp_depths_mixtures_path=paste0(genotypeFreqEstimation_path, "/mix_read_depths.tsv")
+# expected_freqs_mixtures_path=paste0(genotypeFreqEstimation_path, "/mix_exp_geno_freqs.tsv")
+# min_depth=40
+# allele_freqs_components_path=paste0(genotypeFreqEstimation_path, "/comp_ref_all_freqs.tsv")
+# snp_depths_components_path=paste0(genotypeFreqEstimation_path, "/comp_read_depths.tsv")
+# expected_freqs_components_path=paste0(genotypeFreqEstimation_path, "/comp_exp_geno_freqs.tsv")
+# lib_names_corresp_path=paste0(genotypeFreqEstimation_path, "/comp_libnames_corresp.tsv")
+# out_dir="~/GitHub/mip-poolfreq/scripts/genotypeFreqEstimation/example_data/output_files/compare_with_expected_frequencies"
+
+# genotypeFreqEstimation_path="~/MIPs/PUBLI/to_share/DATA_test3_2023_2023_197"
+# genotyping_vcf_path=paste0(genotypeFreqEstimation_path, "/GENOTYPING_MATRIX/04__Genotype_Locus1_Sample_Locus2_Filtered.vcf")
+# allele_freqs_mixtures_path=paste0(genotypeFreqEstimation_path, "/ALLELE_FREQS/ref_allelic_freqs_mixtures_targeted_filtered.tsv")
+# snp_depths_mixtures_path=paste0(genotypeFreqEstimation_path, "/ALLELE_FREQS/total_depths_mixtures_targeted_filtered.tsv")
+# expected_freqs_mixtures_path=paste0(genotypeFreqEstimation_path, "/INFO_FILES/Experiment/expectedGenoFreqs_mixtures.tsv")
+# min_depth=40
+# allele_freqs_components_path=paste0(genotypeFreqEstimation_path, "/ALLELE_FREQS/ref_allelic_freqs_components_targeted_filtered.tsv")
+# snp_depths_components_path=paste0(genotypeFreqEstimation_path, "/ALLELE_FREQS/total_depths_components_targeted_filtered.tsv")
+# expected_freqs_components_path=paste0(genotypeFreqEstimation_path, "/INFO_FILES/Experiment/expectedGenoFreqs_components.tsv")
+# lib_names_corresp_path=paste0(genotypeFreqEstimation_path, "/INFO_FILES/Experiment/corresp_comp_genotypes_libnames.tsv")
+# out_dir="~/MIPs/PUBLI/to_share/DATA_test3_2023_2023_197/GENOTYPE_FREQS/compare_with_expected_frequencies"
 
 # ^ .................................. ^
 
@@ -35,7 +48,8 @@ pkgs<-c(
   "reshape2",
   "scales",
   "ggplot2",
-  "multcompView"
+  "multcompView",
+  "zeallot"
 )
 
 for (pkg in pkgs) {
@@ -58,6 +72,7 @@ option_list <- list(
   make_option(c("--allele_freqs_mix"), type = "character", help = "Path to allele frequencies file of mixtures (with a 'CHROM' and a 'POS' columns)"),
   make_option(c("--depths_mix"), type = "character", help = "Path to SNP depths file of mixtures (with a 'CHROM' and a 'POS' columns)"),
   make_option(c("--exp_freqs_mix"), type = "character", help = "Path to expected genotype frequencies file of mixtures"),
+  make_option(c("--min_depth", "-t"), type = "numeric", default = 0, help = "Minimum read depth threshold. SNPs with at least one genotype < threshold we be removed."),
   make_option(c("--allele_freqs_comp"), type = "character", default = NULL, help = "Path to allele frequencies file of components (with a 'CHROM' and a 'POS' columns)"),
   make_option(c("--depths_comp"), type = "character", default = NULL, help = "Path to SNP depths file of components (with a 'CHROM' and a 'POS' columns)"),
   make_option(c("--exp_freqs_comp"), type = "character", default = NULL, help = "Path to expected genotype frequencies file of components"),
@@ -71,6 +86,7 @@ genotyping_vcf_path <- opt$vcf
 allele_freqs_mixtures_path <- opt$allele_freqs_mix
 snp_depths_mixtures_path <- opt$depths_mix
 expected_freqs_mixtures_path<- opt$exp_freqs_mix
+min_depth <- opt$min_depth
 allele_freqs_components_path <- opt$allele_freqs_comp
 snp_depths_components_path <- opt$depths_comp
 expected_freqs_components_path<- opt$exp_freqs_comp
@@ -92,7 +108,7 @@ optional_files <- list(
   exp_freqs_comp = expected_freqs_components_path
 )
 
-check_missing_args(args = required_files)
+check_missing_args(args = c(required_files, min_depth))
 
 check_input_files(
   required_files = required_files,
@@ -102,32 +118,62 @@ check_input_files(
 
 
 ## Import input files
-genotyping_matrix<-vcf_to_numeric_matrix(
-  vcf_path = genotyping_vcf_path,
-  lib_names_corresp_path = lib_names_corresp_path
+# genotyping_matrix<-vcf_to_numeric_matrix(
+#   vcf_path = genotyping_vcf_path,
+#   lib_names_corresp_path = lib_names_corresp_path
+# )
+# 
+# allele_freqs_mixtures<-read.table(allele_freqs_mixtures_path, header=T)
+# snp_depths_mixtures<-read.table(snp_depths_mixtures_path, header=T)
+# expected_freqs_mixtures<-read.table(expected_freqs_mixtures_path, header=T)
+# 
+# allele_freqs_mixtures<-set_rownames_from_chrom_pos(allele_freqs_mixtures)
+# snp_depths_mixtures<-set_rownames_from_chrom_pos(snp_depths_mixtures)
+# expected_freqs_mixtures_melt<-melt_genotype_freqs(expected_freqs_mixtures, "ExpFreq")
+# 
+# 
+# if (!is.null(allele_freqs_components_path)){
+#   allele_freqs_components<-read.table(allele_freqs_components_path, header=T)
+#   snp_depths_components<-read.table(snp_depths_components_path, header=T)
+#   expected_freqs_components<-read.table(expected_freqs_components_path, header=T)
+#   
+#   allele_freqs_components<-set_rownames_from_chrom_pos(allele_freqs_components)
+#   snp_depths_components<-set_rownames_from_chrom_pos(snp_depths_components)
+#   expected_freqs_components_melt<-melt_genotype_freqs(expected_freqs_components, "ExpFreq")
+#   
+#   c(
+#     snp_depths_mixtures,
+#     allele_freqs_mixtures,
+#     snp_depths_components,
+#     allele_freqs_components
+#   ) %<-% filter_lowdepth_snps(
+#     depths = snp_depths_mixtures,
+#     extra_files = list(
+#       allele_freqs_mixtures,
+#       snp_depths_components,
+#       allele_freqs_components
+#     ),
+#     min_depth = min_depth
+#   )
+# } else {
+#   c(snp_depths_mixtures, allele_freqs_mixtures) %<-% filter_lowdepth_snps(
+#     depths = snp_depths_mixtures,
+#     extra_files = allele_freqs_mixtures,
+#     min_depth = min_depth
+#   )
+# }
+
+inputs <- load_inputs(
+  genotyping_vcf_path = genotyping_vcf_path,
+  lib_names_corresp_path = lib_names_corresp_path,
+  allele_freqs_mixtures_path = allele_freqs_mixtures_path,
+  snp_depths_mixtures_path = snp_depths_mixtures_path,
+  expected_freqs_mixtures_path = expected_freqs_mixtures_path,
+  allele_freqs_components_path = allele_freqs_components_path,
+  snp_depths_components_path = snp_depths_components_path,
+  expected_freqs_components_path = expected_freqs_components_path,
+  min_depth = min_depth
 )
-
-allele_freqs_mixtures<-read.table(allele_freqs_mixtures_path, header=T)
-snp_depths_mixtures<-read.table(snp_depths_mixtures_path, header=T)
-expected_freqs_mixtures<-read.table(expected_freqs_mixtures_path, header=T)
-
-allele_freqs_mixtures<-set_rownames_from_chrom_pos(allele_freqs_mixtures)
-snp_depths_mixtures<-set_rownames_from_chrom_pos(snp_depths_mixtures)
-expected_freqs_mixtures_melt<-melt_genotype_freqs(expected_freqs_mixtures, "ExpFreq")
-
-
-if (!is.null(allele_freqs_components_path)){
-  allele_freqs_components<-read.table(allele_freqs_components_path, header=T)
-  snp_depths_components<-read.table(snp_depths_components_path, header=T)
-  expected_freqs_components<-read.table(expected_freqs_components_path, header=T)
-  
-  allele_freqs_components<-set_rownames_from_chrom_pos(allele_freqs_components)
-  snp_depths_components<-set_rownames_from_chrom_pos(snp_depths_components)
-  expected_freqs_components_melt<-melt_genotype_freqs(expected_freqs_components, "ExpFreq")
-  
-}
-
-
 
 ## Analysis
 
@@ -143,10 +189,10 @@ for (subdir in c(general_subdir, weights_subdir, subsampling_subdir)){
 # Estimate genotype frequencies, compare to expected frequencies and compute biases
 writeLines("\n\nEstimate genotype frequencies, compare to expected frequencies and compute biases:\n")
 genotype_frequencies_mixtures<-estimate_genotype_freqs(
-  genotyping_matrix = genotyping_matrix, 
-  allele_freqs = allele_freqs_mixtures, 
-  snp_depths = snp_depths_mixtures,
-  expected_freqs_melt = expected_freqs_mixtures_melt,
+  genotyping_matrix = inputs$genotyping_matrix, 
+  allele_freqs = inputs$allele_freqs_mixtures, 
+  snp_depths = inputs$snp_depths_mixtures,
+  expected_freqs_melt = inputs$expected_freqs_mixtures_melt,
   out_file = glue("{general_subdir}/est_geno_freqs_mixtures.tsv")
 )
 
@@ -155,12 +201,12 @@ compute_stats_per_exp_freq(
   out_dir = general_subdir
 )
 
-if (! is.null(allele_freqs_components)){
+if (! is.null(inputs$allele_freqs_components)){
   genotype_frequencies_components<-estimate_genotype_freqs(
-    genotyping_matrix = genotyping_matrix, 
-    allele_freqs = allele_freqs_components, 
-    snp_depths = snp_depths_components,
-    expected_freqs_melt = expected_freqs_components_melt,
+    genotyping_matrix = inputs$genotyping_matrix, 
+    allele_freqs = inputs$allele_freqs_components, 
+    snp_depths = inputs$snp_depths_components,
+    expected_freqs_melt = inputs$expected_freqs_components_melt,
     out_file = glue("{general_subdir}/est_geno_freqs_components.tsv")
   )
 } else {
@@ -180,19 +226,19 @@ compute_bias(
 
 # Evaluate the effect of the weight vector
 compare_weight_vector_effect(
-  genotyping_matrix = genotyping_matrix,
-  allele_freqs = allele_freqs_mixtures,
-  snp_depths = snp_depths_mixtures,
-  expected_freqs_melt = expected_freqs_mixtures_melt,
+  genotyping_matrix = inputs$genotyping_matrix,
+  allele_freqs = inputs$allele_freqs_mixtures,
+  snp_depths = inputs$snp_depths_mixtures,
+  expected_freqs_melt = inputs$expected_freqs_mixtures_melt,
   out_dir = weights_subdir
 )
 
 # Evaluate the effect of SNP sub-sampling
 compare_subsampling_effect(
-  genotyping_matrix = genotyping_matrix,
-  allele_freqs = allele_freqs_mixtures,
-  snp_depths = snp_depths_mixtures,
-  expected_freqs_melt = expected_freqs_mixtures_melt,
+  genotyping_matrix = inputs$genotyping_matrix,
+  allele_freqs = inputs$allele_freqs_mixtures,
+  snp_depths = inputs$snp_depths_mixtures,
+  expected_freqs_melt = inputs$expected_freqs_mixtures_melt,
   step_size = 50,
   out_dir = subsampling_subdir
 )
