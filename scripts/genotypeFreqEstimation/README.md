@@ -6,13 +6,24 @@ The contribution of each component to every mixture is inferred from a VCF file 
 
 ---
 
+## Table of Contents
+- [Requirements](#requirements)
+- [Scripts and usage](#scripts-and-usage)
+  - [1. estimate_genotype_frequencies.R](#1-estimate_genotype_frequenciesr)
+  - [2. compare_with_expected_frequencies.R](#2-compare_with_expected_frequenciesr)
+  - [3. plot_MAF_hist.R](#3-plot_maf_histr)
+  - [4. plot_depth_per_marker.R](#4-plot_depth_per_markerr)
+- [Input files](#input-files)
+
+---
+
 ## Requirements
 
 - **R ≥ 4.1**
 - The scripts automatically install missing dependencies:
 
 `optparse, devtools, this.path, vcfR, reshape2,
-ggplot2, UpSetR, glue, scales, multcompView`
+ggplot2, UpSetR, glue, scales, multcompView, zeallot, tidyr, dplyr`
 
 ---
 
@@ -29,6 +40,7 @@ Estimate genotype frequencies per SNP based on allele frequencies and depth info
 -v, --vcf              Components VCF file
 -a, --allele_freqs     Mixture allele frequencies TSV file (including columns CHROM, POS)
 -d, --depths           Mixture depths per SNP TSV file (including columns CHROM, POS)
+-t, --min_depth        Minimum read depth threshold *(default = 0)*
 -l, --libs             Library name correspondence TSV file *(optional)*
 -o, --output_file      Genotype frequencies output TSV file
 ```
@@ -39,9 +51,14 @@ Rscript scripts/estimate_genotype_frequencies.R \
   -v example_data/input_files/comp_genotypes.vcf \
   -a example_data/input_files/mix_ref_all_freqs.tsv \
   -d example_data/input_files/mix_read_depths.tsv \
+  -t 40 \
   -l example_data/input_files/comp_libnames_corresp.tsv \
   -o genotype_frequencies.tsv
 ```
+
+#### SNP filtering by minimum depth
+The `--min_depth` option removes all SNPs for which at least one mixture has a sequencing depth below the specified threshold.  
+This can help exclude low-confidence loci with unreliable allele frequency estimates due to poor sequencing coverage.
 
 #### Output 
 • `genotype_frequencies.tsv`  
@@ -89,6 +106,7 @@ To evaluate how decreasing the number of SNPs impacts estimation accuracy, SNPs 
 --allele_freqs_mix             Mixture allele frequencies TSV file
 --depths_mix                   Mixture depths per SNP TSV file (including columns CHROM, POS)
 --exp_freqs_mix                Mixture expected genotype frequencies TSV file
+-t, --min_depth                Minimum read depth threshold *(default = 0)*
 --allele_freqs_comp            Component allele frequencies TSV file *(optional)*
 --depths_comp                  Component depths per SNP TSV file (including columns CHROM, POS) *(optional)*
 --exp_freqs_comp               Component expected genotype frequencies TSV file *(optional)*
@@ -103,12 +121,17 @@ Rscript scripts/compare_with_expected_frequencies.R \
   --allele_freqs_mix example_data/input_files/mix_ref_all_freqs.tsv \
   --depths_mix example_data/input_files/mix_read_depths.tsv \
   --exp_freqs_mix example_data/input_files/mix_exp_geno_freqs.tsv \
+  -t 40 \
   --allele_freqs_comp example_data/input_files/comp_ref_all_freqs.tsv \
   --depths_comp example_data/input_files/comp_read_depths.tsv \
   --exp_freqs_comp example_data/input_files/comp_exp_geno_freqs.tsv \
   -l example_data/input_files/comp_libnames_corresp.tsv \
   -o .
 ```
+
+#### SNP filtering by minimum depth
+As described [here](#snp-filtering-by-minimum-depth), SNPs whose minimum sequencing depth across mixtures is below the provided threshold are excluded from the analysis.  
+Filtering is based exclusively on the mixture depth file (`--depths_mix`), but the same SNPs are also removed from the corresponding allele frequency and component tables to keep all inputs consistent before estimating genotype frequencies.
 
 #### Outputs
 <img width="460" height="493" alt="image" src="https://github.com/user-attachments/assets/b1502585-e0ba-4367-904b-575f90e5d9a3" />
