@@ -97,7 +97,7 @@ This analysis compares results obtained with and without read depth weighting.
 *One-component mixtures are not included in this analysis.*
 
 4. **Effect of reducing the number of SNPs used for estimation**    
-To evaluate how decreasing the number of SNPs impacts estimation accuracy, SNPs are gradually subsampled in steps of 50, and genotype frequencies are estimated for each subset.  
+To evaluate how decreasing the number of SNPs impacts estimation accuracy, SNPs are gradually subsampled, and genotype frequencies are estimated for each subset.  
 *One-component mixtures are not included in this analysis.*
 
 #### Arguments
@@ -111,6 +111,7 @@ To evaluate how decreasing the number of SNPs impacts estimation accuracy, SNPs 
 --depths_comp                  Component depths per SNP TSV file (including columns CHROM, POS) *(optional)*
 --exp_freqs_comp               Component expected genotype frequencies TSV file *(optional)*
 -l, --libs                     Library name correspondence TSV file *(optional)*
+-s, --subsampling_step                               Number of SNPs added between subsampling iterations (default = 50)
 -o, --out_dir                  Output directory
 ```
 
@@ -126,6 +127,7 @@ Rscript scripts/evaluate_frequency_accuracy.R \
   --depths_comp example_data/input_files/comp_read_depths.tsv \
   --exp_freqs_comp example_data/input_files/comp_exp_geno_freqs.tsv \
   -l example_data/input_files/comp_libnames_corresp.tsv \
+  -s 30 \
   -o .
 ```
 

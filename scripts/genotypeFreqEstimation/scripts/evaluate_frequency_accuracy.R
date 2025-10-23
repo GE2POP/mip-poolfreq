@@ -77,6 +77,7 @@ option_list <- list(
   make_option(c("--depths_comp"), type = "character", default = NULL, help = "Path to SNP depths file of components (with a 'CHROM' and a 'POS' columns)"),
   make_option(c("--exp_freqs_comp"), type = "character", default = NULL, help = "Path to expected genotype frequencies file of components"),
   make_option(c("--libs", "-l"), type = "character", default = NULL, help = "Path to library name correspondence file"),
+  make_option(c("--subsampling_step", "-s"), type = "integer", default = 50, help = "Number of SNPs to skip between subsampling iterations [default = %default]"),
   make_option(c("--out_dir", "-o"), type = "character", help = "Path to output directory")
 )
 
@@ -91,6 +92,7 @@ allele_freqs_components_path <- opt$allele_freqs_comp
 snp_depths_components_path <- opt$depths_comp
 expected_freqs_components_path<- opt$exp_freqs_comp
 lib_names_corresp_path <- opt$libs
+subsampling_step<-opt$subsampling_step
 out_dir <- opt$out_dir
 
 required_files <- list(
@@ -118,50 +120,6 @@ check_input_files(
 
 
 ## Import input files
-# genotyping_matrix<-vcf_to_numeric_matrix(
-#   vcf_path = genotyping_vcf_path,
-#   lib_names_corresp_path = lib_names_corresp_path
-# )
-# 
-# allele_freqs_mixtures<-read.table(allele_freqs_mixtures_path, header=T)
-# snp_depths_mixtures<-read.table(snp_depths_mixtures_path, header=T)
-# expected_freqs_mixtures<-read.table(expected_freqs_mixtures_path, header=T)
-# 
-# allele_freqs_mixtures<-set_rownames_from_chrom_pos(allele_freqs_mixtures)
-# snp_depths_mixtures<-set_rownames_from_chrom_pos(snp_depths_mixtures)
-# expected_freqs_mixtures_melt<-melt_genotype_freqs(expected_freqs_mixtures, "ExpFreq")
-# 
-# 
-# if (!is.null(allele_freqs_components_path)){
-#   allele_freqs_components<-read.table(allele_freqs_components_path, header=T)
-#   snp_depths_components<-read.table(snp_depths_components_path, header=T)
-#   expected_freqs_components<-read.table(expected_freqs_components_path, header=T)
-#   
-#   allele_freqs_components<-set_rownames_from_chrom_pos(allele_freqs_components)
-#   snp_depths_components<-set_rownames_from_chrom_pos(snp_depths_components)
-#   expected_freqs_components_melt<-melt_genotype_freqs(expected_freqs_components, "ExpFreq")
-#   
-#   c(
-#     snp_depths_mixtures,
-#     allele_freqs_mixtures,
-#     snp_depths_components,
-#     allele_freqs_components
-#   ) %<-% filter_lowdepth_snps(
-#     depths = snp_depths_mixtures,
-#     extra_files = list(
-#       allele_freqs_mixtures,
-#       snp_depths_components,
-#       allele_freqs_components
-#     ),
-#     min_depth = min_depth
-#   )
-# } else {
-#   c(snp_depths_mixtures, allele_freqs_mixtures) %<-% filter_lowdepth_snps(
-#     depths = snp_depths_mixtures,
-#     extra_files = allele_freqs_mixtures,
-#     min_depth = min_depth
-#   )
-# }
 
 inputs <- load_inputs(
   genotyping_vcf_path = genotyping_vcf_path,
@@ -225,7 +183,7 @@ compute_bias(
 )
 
 # Evaluate the effect of the weight vector
-compare_weight_vector_effect(
+evaluate_weight_vector_effect(
   genotyping_matrix = inputs$genotyping_matrix,
   allele_freqs = inputs$allele_freqs_mixtures,
   snp_depths = inputs$snp_depths_mixtures,
@@ -234,12 +192,12 @@ compare_weight_vector_effect(
 )
 
 # Evaluate the effect of SNP sub-sampling
-compare_subsampling_effect(
+evaluate_subsampling_effect(
   genotyping_matrix = inputs$genotyping_matrix,
   allele_freqs = inputs$allele_freqs_mixtures,
   snp_depths = inputs$snp_depths_mixtures,
   expected_freqs_melt = inputs$expected_freqs_mixtures_melt,
-  step_size = 50,
+  step_size = subsampling_step,
   out_dir = subsampling_subdir
 )
 

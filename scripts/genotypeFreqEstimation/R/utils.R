@@ -691,7 +691,7 @@ compare_different_est_freqs<-function(freqs_to_compare, variable_name, out_dir, 
 }
 
 
-#' Compare the effect of weight vector on genotype frequency estimation
+#' Evaluate the effect of weight vector on genotype frequency estimation
 #'
 #' This function compares estimated genotype frequencies using:
 #' - read depth as weight
@@ -709,7 +709,7 @@ compare_different_est_freqs<-function(freqs_to_compare, variable_name, out_dir, 
 #'   \item{stats}{A list of dataframes from \code{compute_stats_per_exp_freq()}: mean and standard deviation per expected frequency}
 #'   \item{bias}{A list of dataframes from \code{compute_bias()}: bias per component and per expected frequency}
 #' }
-compare_weight_vector_effect<-function(genotyping_matrix, allele_freqs, snp_depths, expected_freqs_melt, out_dir){
+evaluate_weight_vector_effect<-function(genotyping_matrix, allele_freqs, snp_depths, expected_freqs_melt, out_dir){
   writeLines("\n\nCompare the effect of the weight vector on genotype frequency estimation:\n")
   
   freqs_depth_weight<-estimate_genotype_freqs(
@@ -778,7 +778,7 @@ estimate_geno_freqs_snps_subsampling <- function(genotyping_matrix, allele_freqs
   return(subsampled_genotype_freqs)
 }
 
-#' Compare the effect of SNP subsampling on genotype frequency estimation
+#' Evaluate the effect of SNP subsampling on genotype frequency estimation
 #'
 #' This function evaluates the impact of subsampling different numbers of SNPs on the estimation
 #' of genotype frequencies. For each SNP subset size (provided in `nb_snps_vector`), the function:
@@ -798,7 +798,7 @@ estimate_geno_freqs_snps_subsampling <- function(genotyping_matrix, allele_freqs
 #'   \item{stats}{A list of dataframes from \code{compute_stats_per_exp_freq()}: mean and standard deviation per expected frequency}
 #'   \item{bias}{A list of dataframes from \code{compute_bias()}: bias per component and per expected frequency}
 #' }
-compare_subsampling_effect<-function(genotyping_matrix, allele_freqs, snp_depths, expected_freqs_melt, step_size, out_dir){
+evaluate_subsampling_effect<-function(genotyping_matrix, allele_freqs, snp_depths, expected_freqs_melt, step_size, out_dir){
   writeLines("\n\nCompare the effect of random SNP subsampling on genotype frequency estimation:\n")
   
   freqs_to_compare_subsampling<-estimate_geno_freqs_snps_subsampling(
