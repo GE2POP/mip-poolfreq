@@ -111,7 +111,7 @@ To evaluate how decreasing the number of SNPs impacts estimation accuracy, SNPs 
 --depths_comp                  Component depths per SNP TSV file (including columns CHROM, POS) *(optional)*
 --exp_freqs_comp               Component expected genotype frequencies TSV file *(optional)*
 -l, --libs                     Library name correspondence TSV file *(optional)*
--s, --subsampling_step                               Number of SNPs added between subsampling iterations (default = 50)
+-s, --subsampling_step         Number of SNPs added between subsampling iterations (default = 50)
 -o, --out_dir                  Output directory
 ```
 
