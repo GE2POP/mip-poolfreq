@@ -10,7 +10,7 @@ The contribution of each component to every mixture is inferred from a VCF file 
 - [Requirements](#requirements)
 - [Scripts and usage](#scripts-and-usage)
   - [1. estimate_genotype_frequencies.R](#1-estimate_genotype_frequenciesr)
-  - [2. compare_with_expected_frequencies.R](#2-compare_with_expected_frequenciesr)
+  - [2. evaluate_frequency_accuracy.R](#2-evaluate_frequency_accuracyr)
   - [3. plot_MAF_hist.R](#3-plot_maf_histr)
   - [4. plot_depth_per_marker.R](#4-plot_depth_per_markerr)
 - [Input files](#input-files)
@@ -78,7 +78,7 @@ EL4X_482	Tm1313	0.348394182207116
 ```
 
 
-### 2. `compare_with_expected_frequencies.R`
+### 2. `evaluate_frequency_accuracy.R`
 
 *Compare estimated genotype frequencies to expected values and compute bias, variance, and correlation metrics.*  
 
@@ -116,7 +116,7 @@ To evaluate how decreasing the number of SNPs impacts estimation accuracy, SNPs 
 
 #### Example
 ``` 
-Rscript scripts/compare_with_expected_frequencies.R \
+Rscript scripts/evaluate_frequency_accuracy.R \
   -v example_data/input_files/comp_genotypes.vcf \
   --allele_freqs_mix example_data/input_files/mix_ref_all_freqs.tsv \
   --depths_mix example_data/input_files/mix_read_depths.tsv \
@@ -130,7 +130,7 @@ Rscript scripts/compare_with_expected_frequencies.R \
 ```
 
 #### SNP filtering by minimum depth
-As described [here](#snp-filtering-by-minimum-depth), SNPs whose minimum sequencing depth across mixtures is below the provided threshold are excluded from the analysis.  
+As [previously described](#snp-filtering-by-minimum-depth), SNPs whose minimum sequencing depth across mixtures is below the provided threshold are excluded from the analysis.  
 Filtering is based exclusively on the mixture depth file (`--depths_mix`), but the same SNPs are also removed from the corresponding allele frequency and component tables to keep all inputs consistent before estimating genotype frequencies.
 
 #### Outputs
