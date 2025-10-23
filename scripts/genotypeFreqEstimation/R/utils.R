@@ -392,9 +392,10 @@ estimate_genotype_freqs <- function(genotyping_matrix, allele_freqs, snp_depths 
 #' @param y_lab Label for y-axis
 #' @param x_lab Label for x-axis
 #' @param fill_lab Legend title for fill
+#' @param show_zero Logical (default = FALSE). If TRUE, adds a horizontal dashed line at y = 0 to help visualize deviations around zero.
 #'
 #' @return A ggplot object
-plot_condition_effect_boxplots <- function(df_melt, x_col, y_col, fill_col, ref_col = NULL, y_lab = "", x_lab = "", fill_lab = "Group") {
+plot_condition_effect_boxplots <- function(df_melt, x_col, y_col, fill_col, ref_col = NULL, y_lab = "", x_lab = "", fill_lab = "Group", show_zero = F) {
   # Set fill as factor to ensure ordering
   df_melt[[fill_col]] <- factor(df_melt[[fill_col]], levels = sort(unique(df_melt[[fill_col]])))
   
@@ -402,15 +403,10 @@ plot_condition_effect_boxplots <- function(df_melt, x_col, y_col, fill_col, ref_
   fill_levels <- levels(df_melt[[fill_col]])
   color_palette <- scales::hue_pal()(length(fill_levels))
   names(color_palette) <- fill_levels
-  
-  p <- ggplot(df_melt, aes_string(x = x_col, y = y_col, fill = fill_col)) +
-    geom_boxplot() +
-    scale_fill_manual(values = color_palette) +
-    xlab(x_lab) +
-    ylab(y_lab) +
-    labs(fill = fill_lab) +
-    theme_minimal() +
-    scale_x_discrete(expand = expansion(add = c(1, 0)))
+
+  p <- ggplot(df_melt, aes_string(x = x_col, y = y_col, fill = fill_col))+
+    scale_x_discrete(expand = expansion(mult = c(0, 0)))
+    
   
   # Optional reference lines and labels
   if (!is.null(ref_col)) {
@@ -425,6 +421,18 @@ plot_condition_effect_boxplots <- function(df_melt, x_col, y_col, fill_col, ref_
                 hjust = 0, vjust = -0.5, size = 3) +
       scale_color_manual(values = color_palette, guide = "none")
   }
+  if (isTRUE(show_zero)) {
+    p <- p +
+      geom_hline(yintercept = 0, color = "grey40", linetype = "dashed", linewidth = 0.6)
+  }
+  
+  p <- p +
+    geom_boxplot() +
+      scale_fill_manual(values = color_palette) +
+      xlab(x_lab) +
+      ylab(y_lab) +
+      labs(fill = fill_lab) +
+      theme_minimal(base_size = 16)
   
   return(p)
 }
@@ -451,7 +459,9 @@ compare_boxplots_est_freq <- function(freqs_df, variable_name, out_file = NULL) 
   )
   
   if (!is.null(out_file)) {
-    ggsave(out_file, plot = p, width = 8, height = 6, bg = "white")
+    n_conditions <- length(unique(df_melt$Condition))
+    n_expFreq <- length(unique(df_melt$ExpFreq))
+    ggsave(out_file, plot = p, width = 2+0.5*n_expFreq*n_conditions, height = 4, bg = "white")
   }
   
   return(p)
@@ -494,6 +504,11 @@ plot_correlation_with_exp_freq <- function(freqs_df, extra_freqs_df = NULL, out_
   if (! is.null(out_file)) { pdf(out_file, width = 11.11, height = 8.33) }
   
   for (condition in colnames(freqs_df)[!colnames(freqs_df) %in% c("Component", "Mixture", "ExpFreq")]) {
+    par(
+      cex.axis = 1.2,
+      cex.lab = 1.4,
+      cex.main = 1.5
+    )
     plot(freqs_df[, condition] ~ freqs_df$ExpFreq, pch = 16, las = 2, col = alpha("darkred", 0.3), 
          ylim = c(0, 1.1), xlim = c(0, 1.1), ylab = "Estimated frequencies", xlab = "Expected frequencies", main = condition)
     
@@ -577,7 +592,8 @@ plot_error_boxplots <- function(
     fill_col = "Component",
     y_lab = "Error (estimated - expected)",
     x_lab = variable_name,
-    fill_lab = "Component"
+    fill_lab = "Component",
+    show_zero = T
   )
   
   p_expfreq <- plot_condition_effect_boxplots(
@@ -587,12 +603,16 @@ plot_error_boxplots <- function(
     fill_col = "ExpFreq",
     y_lab = "Error (estimated - expected)",
     x_lab = variable_name,
-    fill_lab = "Expected frequency"
+    fill_lab = "Expected frequency",
+    show_zero = T
   )
   
   if (!is.null(out_dir)) {
-    ggsave(glue("{out_dir}/error_by_component{suffix}.png"), p_component, width = 8, height = 6, dpi = 300, bg = "white")
-    ggsave(glue("{out_dir}/error_by_exp_freq{suffix}.png"), p_expfreq, width = 8, height = 6, dpi = 300, bg = "white")
+    n_conditions <- length(unique(errors_long_df$Condition))
+    n_components <- length(unique(errors_long_df$Component))
+    n_expFreq <- length(unique(errors_long_df$ExpFreq))
+    ggsave(glue("{out_dir}/error_by_component{suffix}.png"), p_component, width = 3+0.5*n_components*n_conditions, height = 4, dpi = 300, bg = "white")
+    ggsave(glue("{out_dir}/error_by_exp_freq{suffix}.png"), p_expfreq, width = 3+0.5*n_expFreq*n_conditions, height = 4, dpi = 300, bg = "white")
   } else {
     print(p_component)
     print(p_expfreq)
@@ -837,6 +857,11 @@ plot_MAF_hist<-function(vcf, x_lim_values, out_dir = NULL){
   
   
   if (!is.null(out_dir)){ png(glue("{out_dir}/MAF_hist.png"), width = 800, height = 600) }
+  par(
+    cex.axis = 1.2,
+    cex.lab = 1.4,
+    cex.main = 1.5
+  )
   hist(maf$MAF,
        ylab = "Number of SNPs",
        xlab = "Minor Allele Frequency",
@@ -893,7 +918,8 @@ plot_marker_set_intersections <- function(numeric_matrix, out_file = NULL) {
     nsets = ncol(df),
     nintersects = 40,
     order.by = "freq",
-    keep.order = TRUE
+    keep.order = TRUE,
+    text.scale = 1.8
   )
   print(p)
   
@@ -972,7 +998,7 @@ plot_depth_per_marker <- function(depths, hline = NULL, out_file = NULL) {
   
   p <- ggplot(df_long, aes(x = Marker, y = Depth, fill = "skyblue")) +
     geom_boxplot(outlier.size = 0.5, color="grey30", fill="skyblue") +
-    theme_minimal() +
+    theme_minimal(base_size = 16) +
     theme(
       axis.text.x = element_blank(),
       axis.ticks.x = element_blank(),
@@ -989,7 +1015,7 @@ plot_depth_per_marker <- function(depths, hline = NULL, out_file = NULL) {
   }
   
   if (!is.null(out_file)) {
-    ggsave(out_file, p, width = 10, height = 6, dpi = 300, bg = "white")
+    ggsave(out_file, p, width = 10, height = 8, dpi = 300, bg = "white")
     writeLines(c("", "Output file saved in:", out_file, ""))
   } else {
     print(p)
