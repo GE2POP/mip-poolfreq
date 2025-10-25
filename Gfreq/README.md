@@ -1,4 +1,4 @@
-# genotypeFreqEstimation
+# Gfreq
 
 *R toolkit for estimating genotype frequencies in mixtures of known components*  
 
