@@ -60,11 +60,12 @@ for (pkg in pkgs) {
   library(pkg, character.only = TRUE)
 }
 
+user_dir <- getwd()
 script_dir <- dirname(this.path::this.path())
 project_root <- normalizePath(file.path(script_dir, ".."))
 setwd(project_root)
-
 load_all(".")
+setwd(user_dir)
 
 ## Parse arguments
 option_list <- list(
