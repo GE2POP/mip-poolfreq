@@ -1,51 +1,18 @@
 #!/usr/bin/env Rscript
 
-# Print full error traceback when running from command line
 options(error = function() {
   traceback(2)
   q(status = 1)
 })
 
-# v ... to replace with CLI params ... v
-## Input parameters
-# genotypeFreqEstimation_path="~/GitHub/mip-poolfreq/scripts/genotypeFreqEstimation"
-# depth_list=paste0(genotypeFreqEstimation_path, "/data_test/data/ALL_FREQ/depth_files.list")
-# hline=50
-# out_dir=paste0(genotypeFreqEstimation_path, "/data_test/results/plot_depth_per_marker")
+suppressPackageStartupMessages({
+  library(ggplot2)
+  library(glue)
+  library(optparse)
+  library(reshape2)
+  library(Gfreq)
+})
 
-# ^ .................................. ^
-
-
-## Import dependencies
-user_lib <- Sys.getenv("R_LIBS_USER")
-if (!dir.exists(user_lib)) dir.create(user_lib, recursive = TRUE)
-.libPaths(user_lib)
-
-pkgs<-c(
-  "optparse",
-  "devtools",
-  "glue",
-  "ggplot2",
-  "reshape2"
-)
-
-
-for (pkg in pkgs) {
-  if (!requireNamespace(pkg, quietly = TRUE)) {
-    message("Installing missing package: ", pkg)
-    install.packages(pkg, dependencies = TRUE)
-  }
-  library(pkg, character.only = TRUE)
-}
-
-user_dir <- getwd()
-script_dir <- dirname(this.path::this.path())
-project_root <- normalizePath(file.path(script_dir, ".."))
-setwd(project_root)
-load_all(".")
-setwd(user_dir)
-
-## Parse arguments
 option_list <- list(
   make_option(c("--depth_files_list", "-d"), type = "character", help = "Path to a list of depth files"),
   make_option(c("--hline", "-l"), type = "numeric", default = NULL, help = "Numeric value for a horizontal reference line (read depth value)"),
@@ -75,7 +42,6 @@ check_input_files(
   optional_files = optional_files
 )
 
-## Plot depths per marker
 depths<-merge_depth_files(
   depth_list = depth_list
 )

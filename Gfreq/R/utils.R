@@ -1,8 +1,11 @@
-#' Check that all provided paths are non-NULL
+#' Check that all required arguments are provided
 #'
-#' @param paths Named list of paths to check
+#' This function checks that all elements of a named list are non-NULL.
+#' @param args Named list of required arguments to check.
+#'   Each element must be non-NULL.
 #'
-#' @return Stops if any value is NULL
+#' @return Nothing. The function stops with an error if at least one element is NULL.
+#' @export
 check_missing_args <- function(args) {
   null_entries <- names(args)[vapply(args, is.null, logical(1))]
   
@@ -20,6 +23,7 @@ check_missing_args <- function(args) {
 #'
 #' @param name Name of the file (for display purposes)
 #' @param path Path to the file
+#' @export
 check_file_exists <- function(name, path) {
   if (!file.exists(path)) {
     stop(sprintf("File or folder does not exist:\n- %s: %s", name, path), call. = FALSE)
@@ -30,6 +34,7 @@ check_file_exists <- function(name, path) {
 #'
 #' @param required_files Named list of required file/folder paths
 #' @param optional_files Named list of optional file/folder paths (default: NULL)
+#' @export
 check_input_files <- function(required_files, optional_files = NULL) {
   all_files <- required_files
   if (!is.null(optional_files)) {
@@ -48,6 +53,7 @@ check_input_files <- function(required_files, optional_files = NULL) {
 #' Converts a genotype string (e.g. "0/1" or "0|1") into a numeric representation.
 #' @param x A character string representing a genotype in the order REF/ALT (e.g. "0/0", "0/1", "1/1")
 #' @return A numeric value: 1 (homozygous ref), 0.5 (heterozygous), 0 (homozygous alt), or NA
+#' @export
 convert_gt_to_numeric <- function(x) {
   if (x %in% c("0/0", "0|0")) return(1)
   else if (x %in% c("0/1", "1/0", "0|1", "1|0")) return(0.5)
@@ -60,6 +66,7 @@ convert_gt_to_numeric <- function(x) {
 #' @param vcf_path Path to VCF file
 #' @param lib_names_corresp_path Path to a table matching sample library names to sample genotype names (default = NULL)
 #' @return Numeric genotyping matrix with values 1 (hom. REF), 0.5 (het), and 0 (hom. ALT) (SNPs x samples)
+#' @export
 vcf_to_numeric_matrix <- function(vcf_path, lib_names_corresp_path = NULL) {
   writeLines("\n\nImporting vcf genotyping matrix:\n")
   vcf <- read.vcfR(vcf_path)
@@ -82,6 +89,7 @@ vcf_to_numeric_matrix <- function(vcf_path, lib_names_corresp_path = NULL) {
 #'
 #' @return Numeric matrix with rows reoriented to major/minor:
 #'   1 = hom. major, 0.5 = het, 0 = hom. minor.
+#' @export
 num_gt_matrix_to_majmin <- function(numeric_matrix) {
   f_ref <- rowMeans(numeric_matrix, na.rm = TRUE)
   inv <- !is.na(f_ref) & (f_ref < 0.5)
@@ -93,10 +101,11 @@ num_gt_matrix_to_majmin <- function(numeric_matrix) {
 #'
 #' @param vcf_path Path to VCF file.
 #' @param lib_names_corresp_path Optional path to a two-column mapping table
-#'   (Library_name → Genotype) for renaming samples.
+#'   (Library_name -> Genotype) for renaming samples.
 #'
 #' @return Numeric genotyping matrix (SNPs x samples) oriented to major/minor:
 #'   1 = hom. major, 0.5 = het, 0 = hom. minor.
+#' @export
 vcf_to_majmin_num_gt_matrix <- function(vcf_path, lib_names_corresp_path = NULL) {
   numeric_matrix <- vcf_to_numeric_matrix(
     vcf_path = vcf_path,
@@ -114,6 +123,7 @@ vcf_to_majmin_num_gt_matrix <- function(vcf_path, lib_names_corresp_path = NULL)
 #' @param required_cols A character vector of required column names.
 #'
 #' @return Nothing.
+#' @export
 check_columns <- function(df, required_cols) {
   df_name <- deparse(substitute(df))
   missing <- setdiff(required_cols, colnames(df))
@@ -131,6 +141,7 @@ check_columns <- function(df, required_cols) {
 #' @param df A data frame with columns named `CHROM` and `POS`.
 #'
 #' @return A data frame with updated row names and without the `CHROM` and `POS` columns.
+#' @export
 set_rownames_from_chrom_pos <- function(df) {
   check_columns(df, c("CHROM", "POS"))
   
@@ -147,6 +158,7 @@ set_rownames_from_chrom_pos <- function(df) {
 #' @param freq_col_name A character string specifying the name to use for the frequency column in the output.
 #'
 #' @return A dataframe in long format, with columns Mixture, Component, and a frequency column named according to "freq_col_name".
+#' @export
 melt_genotype_freqs<-function(genotype_freqs, freq_col_name){
   genotype_freqs_melt<-melt(genotype_freqs, id.vars = "Mixture")
   colnames(genotype_freqs_melt)[2:3]<-c("Component", freq_col_name)
@@ -167,7 +179,7 @@ melt_genotype_freqs<-function(genotype_freqs, freq_col_name){
 #'
 #' @return A list of filtered data.frames, starting with the filtered `depths`
 #'   followed by the filtered elements of `extra_files`, in the same order.
-#'
+#' @export
 filter_lowdepth_snps<-function(depths, extra_files, min_depth){
   if (is.data.frame(extra_files)) {
     extra_files <- list(extra_files)
@@ -197,6 +209,7 @@ filter_lowdepth_snps<-function(depths, extra_files, min_depth){
 #'
 #' @return Invisibly returns `TRUE` if all tables contain identical SNP sets.
 #'   Stops execution with an error message if any mismatch is detected.
+#' @export
 check_identical_snps <- function(dfs, context = NULL) {
   rn_list <- lapply(dfs, rownames)
   
@@ -243,6 +256,7 @@ check_identical_snps <- function(dfs, context = NULL) {
 #'   - `allele_freqs_components`: formatted allele frequency table for components (if provided).
 #'   - `snp_depths_components`: formatted SNP depth table for components (if provided).
 #'   - `expected_freqs_components_melt`: melted expected genotype frequencies for components (if provided).
+#' @export
 load_inputs <- function(
     genotyping_vcf_path,
     lib_names_corresp_path,
@@ -338,6 +352,7 @@ load_inputs <- function(
 #' @param est_freq_col_name Column name for estimated frequencies (default = "EstFreq")
 #' @param out_file Path to the output file to write the estimated genotype frequencies (default = NULL)
 #' @return A melted dataframe of the estimated genotype frequencies
+#' @export
 estimate_genotype_freqs <- function(genotyping_matrix, allele_freqs, snp_depths = NULL, expected_freqs_melt = NULL, est_freq_col_name = "EstFreq", out_file = NULL) {
   nb_mixtures <- ncol(allele_freqs)
   nb_components <- ncol(genotyping_matrix)
@@ -395,6 +410,7 @@ estimate_genotype_freqs <- function(genotyping_matrix, allele_freqs, snp_depths 
 #' @param show_zero Logical (default = FALSE). If TRUE, adds a horizontal dashed line at y = 0 to help visualize deviations around zero.
 #'
 #' @return A ggplot object
+#' @export
 plot_condition_effect_boxplots <- function(df_melt, x_col, y_col, fill_col, ref_col = NULL, y_lab = "", x_lab = "", fill_lab = "Group", show_zero = F) {
   # Set fill as factor to ensure ordering
   df_melt[[fill_col]] <- factor(df_melt[[fill_col]], levels = sort(unique(df_melt[[fill_col]])))
@@ -443,6 +459,7 @@ plot_condition_effect_boxplots <- function(df_melt, x_col, y_col, fill_col, ref_
 #' @param variable_name Label for x-axis (below all conditions)
 #' @param out_file Path to the output file to save the plot (default = NULL)
 #' @return A ggplot object
+#' @export
 compare_boxplots_est_freq <- function(freqs_df, variable_name, out_file = NULL) {
   df_melt <- melt(freqs_df[, -c(1:2)], id.vars = "ExpFreq")
   colnames(df_melt)[2:3] <- c("Condition", "EstFreq")
@@ -475,6 +492,7 @@ compare_boxplots_est_freq <- function(freqs_df, variable_name, out_file = NULL) 
 #' @param out_dir Path the the output directory to write output files (default = NULL)
 #' @param suffix Suffix to add in the output file names (default = "")
 #' @return A list with two dataframes: expected frequencies mean and standard deviation
+#' @export
 compute_stats_per_exp_freq <- function(freqs_df, out_dir = NULL, suffix = "") {
   output <- list()
   df_melt <- melt(freqs_df[, -c(1:2)], id.vars = "ExpFreq")
@@ -499,6 +517,7 @@ compute_stats_per_exp_freq <- function(freqs_df, out_dir = NULL, suffix = "") {
 #' @param freqs_df Dataframe with an "ExpFreq" colomn (providing the expected frequencies) and 1 or more estimated frequencies column(s)
 #' @param extra_freqs_df Dataframe with additional points to plot (they won't be used to compute the regression) (default = NULL)
 #' @param out_file Path to the output file to save the plot (default = NULL)
+#' @export
 plot_correlation_with_exp_freq <- function(freqs_df, extra_freqs_df = NULL, out_file = NULL) {
   
   if (! is.null(out_file)) { pdf(out_file, width = 11.11, height = 8.33) }
@@ -544,6 +563,7 @@ plot_correlation_with_exp_freq <- function(freqs_df, extra_freqs_df = NULL, out_
 #' @return A list with:
 #'   - components: data.frame with mean bias per Component and significance group
 #'   - exp_freqs: data.frame with mean bias per ExpFreq
+#' @export
 compute_bias_from_errors <- function(freqs_df, error_col, condition) {
   stopifnot(startsWith(error_col, "error_"))
   
@@ -579,6 +599,7 @@ compute_bias_from_errors <- function(freqs_df, error_col, condition) {
 #' @param suffix Optional suffix to append to output file names (default = "")
 #'
 #' @return NULL. Plots are printed if no output directory is given.
+#' @export
 plot_error_boxplots <- function(
     errors_long_df,
     variable_name,
@@ -628,6 +649,7 @@ plot_error_boxplots <- function(
 #' @param out_dir Path the the output directory to write output files (default = NULL)
 #' @param suffix Suffix to add in the output file names (default = "")
 #' @return A list with bias dataframes per component and per expected frequency
+#' @export
 compute_bias <- function(freqs_df, variable_name = "", out_dir = NULL, suffix = "") {
   est_freq_cols <- setdiff(colnames(freqs_df), c("Component", "Mixture", "ExpFreq"))
   components_bias <- data.frame(Component = unique(freqs_df$Component))
@@ -681,6 +703,7 @@ compute_bias <- function(freqs_df, variable_name = "", out_dir = NULL, suffix = 
 #'   \item{stats}{A list of dataframes from \code{compute_stats_per_exp_freq()}: mean and standard deviation per expected frequency}
 #'   \item{bias}{A list of dataframes from \code{compute_bias()}: bias per component and per expected frequency}
 #' }
+#' @export
 compare_different_est_freqs<-function(freqs_to_compare, variable_name, out_dir, suffix){
   compare_boxplots_est_freq(
     freqs_df = freqs_to_compare,
@@ -729,6 +752,7 @@ compare_different_est_freqs<-function(freqs_to_compare, variable_name, out_dir, 
 #'   \item{stats}{A list of dataframes from \code{compute_stats_per_exp_freq()}: mean and standard deviation per expected frequency}
 #'   \item{bias}{A list of dataframes from \code{compute_bias()}: bias per component and per expected frequency}
 #' }
+#' @export
 evaluate_weight_vector_effect<-function(genotyping_matrix, allele_freqs, snp_depths, expected_freqs_melt, out_dir){
   writeLines("\n\nCompare the effect of the weight vector on genotype frequency estimation:\n")
   
@@ -765,6 +789,7 @@ evaluate_weight_vector_effect<-function(genotyping_matrix, allele_freqs, snp_dep
 #' @param snp_depths Read depths matrix (SNPs x mixtures) (default = NULL)
 #' @param expected_freqs_melt Melted dataframe of expected genotype frequencies (default = NULL)
 #' @return Dataframe of estimated frequencies per condition
+#' @export
 estimate_geno_freqs_snps_subsampling <- function(genotyping_matrix, allele_freqs, step_size, snp_depths = NULL, expected_freqs_melt = NULL) {
   
   common_snps <- intersect(rownames(genotyping_matrix), rownames(allele_freqs))
@@ -818,6 +843,7 @@ estimate_geno_freqs_snps_subsampling <- function(genotyping_matrix, allele_freqs
 #'   \item{stats}{A list of dataframes from \code{compute_stats_per_exp_freq()}: mean and standard deviation per expected frequency}
 #'   \item{bias}{A list of dataframes from \code{compute_bias()}: bias per component and per expected frequency}
 #' }
+#' @export
 evaluate_subsampling_effect<-function(genotyping_matrix, allele_freqs, snp_depths, expected_freqs_melt, step_size, out_dir){
   writeLines("\n\nCompare the effect of random SNP subsampling on genotype frequency estimation:\n")
   
@@ -847,6 +873,7 @@ evaluate_subsampling_effect<-function(genotyping_matrix, allele_freqs, snp_depth
 #' @param x_lim_values A numeric vector of length 2 indicating the minimum and maximum x-axis limits (e.g., `c(0, 0.5)`).
 #'
 #' @return A histogram plot of the MAF distribution. No return value; the function is used for its side effect (plot).
+#' @export
 plot_MAF_hist<-function(vcf, x_lim_values, out_dir = NULL){
   min_x_lim<-x_lim_values[1]
   max_x_lim<-x_lim_values[2]
@@ -892,6 +919,7 @@ plot_MAF_hist<-function(vcf, x_lim_values, out_dir = NULL){
 #' @param vcf A numeric genotyping matrix (rows = SNPs, columns = samples) where 1 = homozygous for the major allele, 0 = homozygous for the minor allele. Typically produced by [vcf_to_majmin_numeric_matrix()].
 #' @param out_file Output PNG file path.
 #' @return An UpSet plot of the marker set intersections. No return value; the function is used for its side effect (plot).
+#' @export
 plot_marker_set_intersections <- function(numeric_matrix, out_file = NULL) {
 
   df <- as.data.frame(numeric_matrix, stringsAsFactors = FALSE)
@@ -936,6 +964,7 @@ plot_marker_set_intersections <- function(numeric_matrix, out_file = NULL) {
 #' @param out_dir Path the the output directory to write output files (default = NULL)
 #' @param suffix Suffix to add in the output file names (default = "")
 #' @return An error dataframe
+#' @export
 compute_errors <- function(freqs_df, out_dir = NULL, suffix = "") {
   est_freq_cols <- setdiff(colnames(freqs_df), c("Component", "Mixture", "Origin", "ExpFreq"))
   errors_df<-freqs_df
@@ -957,6 +986,7 @@ compute_errors <- function(freqs_df, out_dir = NULL, suffix = "") {
 #' Listed files must be read depths matrices (SNPs x samples) with CHROM and POS as first and second columns.
 #'
 #' @return A merged data.frame containing all depth files joined by CHROM and POS.
+#' @export
 merge_depth_files <- function(depth_list) {
   files <- readLines(depth_list)
   files <- files[files != ""]
@@ -976,6 +1006,7 @@ merge_depth_files <- function(depth_list) {
 #' @param depths Read depth data frame (SNPs x samples) with CHROM and POS as first two columns.
 #'
 #' @return A cleaned read depth data frame with chrom_pos as row names and no CHROM/POS columns.
+#' @export
 clean_depth_file <- function(depths){
   rownames(depths) <- paste(depths$CHROM, depths$POS, sep = "_")
   depths <- depths[, -c(1:2)]
@@ -989,6 +1020,7 @@ clean_depth_file <- function(depths){
 #' @param out_file Optional path to save the plot as a PNG. If NULL, the plot is printed.
 #'
 #' @return A ggplot object (printed or saved).
+#' @export
 plot_depth_per_marker <- function(depths, hline = NULL, out_file = NULL) {
   depths <- clean_depth_file(depths)
   depths <- depths[names(sort(rowMeans(depths))), ]
@@ -1029,6 +1061,7 @@ plot_depth_per_marker <- function(depths, hline = NULL, out_file = NULL) {
 #' @param out_file Optional Path to save the output as a TSV.
 #'
 #' @return A data frame of mean depths per marker (printed or saved).
+#' @export
 compute_mean_depth_per_marker <- function(depths, out_file = NULL){
   depths <- clean_depth_file(depths)
   mean_depths<-as.data.frame(cbind(row.names(depths),round(rowMeans(depths), 2)))

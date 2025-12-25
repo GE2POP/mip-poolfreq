@@ -1,37 +1,58 @@
 # Gfreq
 
-*R toolkit for estimating genotype frequencies in mixtures of known components*  
+*An R package with a command-line interface for estimating genotype frequencies in mixtures of known components*  
 
-The contribution of each component to every mixture is inferred from a VCF file providing the component genotypes at a set of SNPs, combined with the allele frequencies observed at the same SNPs in the mixtures, and their corresponding sequencing depths to weight the estimation. In case of artificial mixtures of known proportions, estimated frequencies can be compared with theoretical expectations.
+Gfreq infers the contribution of each component to a set of mixtures using a VCF file providing component genotypes at a set of SNPs, combined with allele frequencies observed at the same SNPs in the mixtures and their corresponding sequencing depths to weight the estimation. For artificial mixtures of known proportions, estimated frequencies can be compared with theoretical expectations.
 
 ---
 
 ## Table of Contents
-- [Requirements](#requirements)
-- [Scripts and usage](#scripts-and-usage)
-  - [1. estimate_genotype_frequencies.R](#1-estimate_genotype_frequenciesr)
-  - [2. evaluate_frequency_accuracy.R](#2-evaluate_frequency_accuracyr)
-  - [3. plot_MAF_hist.R](#3-plot_maf_histr)
-  - [4. plot_depth_per_marker.R](#4-plot_depth_per_markerr)
+- [Installation](#installation)
+- [Command-line usage](#command-line-usage)
+  - [1. estimate_genotype_frequencies](#1-estimate_genotype_frequencies)
+  - [2. evaluate_frequency_accuracy](#2-evaluate_frequency_accuracy)
+  - [3. plot_MAF_hist](#3-plot_maf_hist)
+  - [4. plot_depth_per_marker](#4-plot_depth_per_marker)
 - [Input files](#input-files)
 
 ---
 
-## Requirements
+## Installation
+
+### Requirements
 
 - **R ≥ 4.1**
-- The scripts automatically install missing dependencies:
 
-`optparse, devtools, this.path, vcfR, reshape2,
-ggplot2, UpSetR, glue, scales, multcompView, zeallot, tidyr, dplyr`
+### Install from source
+
+```bash
+git clone git@github.com:GE2POP/mip-poolfreq.git
+cd mip-poolfreq/Gfreq
+R CMD INSTALL Gfreq
+```
+
+### Expose the command-line interface
+
+After installation, add the Gfreq command-line tools to your PATH:
+```bash
+export PATH="$(Rscript -e 'cat(system.file("bin", package="Gfreq"))'):$PATH"
+```
+
+To make this permanent, add the line above to your ~/.bashrc.
+
+### Check installation
+
+```bash
+Gfreq --help
+```
 
 ---
 
-## Scripts and usage
+## Command-line usage
 
 *Example input and output files are provided in the example_data/ directory to illustrate the expected formats and typical results.*
 
-### 1. `estimate_genotype_frequencies.R`
+### 1. `estimate_genotype_frequencies`
 
 Estimate genotype frequencies per SNP based on allele frequencies and depth information.
 
@@ -47,7 +68,7 @@ Estimate genotype frequencies per SNP based on allele frequencies and depth info
 
 #### Example
 ```
-Rscript scripts/estimate_genotype_frequencies.R \
+Gfreq estimate_genotype_frequencies \
   -v example_data/input_files/comp_genotypes.vcf \
   -a example_data/input_files/mix_ref_all_freqs.tsv \
   -d example_data/input_files/mix_read_depths.tsv \
@@ -78,7 +99,7 @@ EL4X_482	Tm1313	0.348394182207116
 ```
 
 
-### 2. `evaluate_frequency_accuracy.R`
+### 2. `evaluate_frequency_accuracy`
 
 *Compare estimated genotype frequencies to expected values and compute bias, variance, and correlation metrics.*  
 
@@ -117,7 +138,7 @@ To evaluate how decreasing the number of SNPs impacts estimation accuracy, SNPs 
 
 #### Example
 ``` 
-Rscript scripts/evaluate_frequency_accuracy.R \
+Gfreq evaluate_frequency_accuracy \
   -v example_data/input_files/comp_genotypes.vcf \
   --allele_freqs_mix example_data/input_files/mix_ref_all_freqs.tsv \
   --depths_mix example_data/input_files/mix_read_depths.tsv \
@@ -170,7 +191,7 @@ Filtering is based exclusively on the mixture depth file (`--depths_mix`), but t
 </p>
 
 
-### 3. `plot_MAF_hist.R`
+### 3. `plot_MAF_hist`
 Compute Minor Allele Frequency (MAF) values from a VCF file and plot their distribution.
 
 #### Arguments
@@ -182,7 +203,7 @@ Compute Minor Allele Frequency (MAF) values from a VCF file and plot their distr
 
 #### Example
 ```
-Rscript scripts/plot_MAF_hist.R \
+Gfreq plot_MAF_hist \
   -v example_data/input_files/comp_genotypes.vcf \
   -l example_data/input_files/comp_libnames_corresp.tsv \
   -o .
@@ -198,7 +219,7 @@ Rscript scripts/plot_MAF_hist.R \
 
 
 
-### 4. `plot_depth_per_marker.R`
+### 4. `plot_depth_per_marker`
 Plot read depth distribution (boxplots) per SNP.
 
 #### Arguments
@@ -210,7 +231,7 @@ Plot read depth distribution (boxplots) per SNP.
 
 #### Example
 ```
-Rscript scripts/plot_depth_per_marker.R \
+Gfreq plot_depth_per_marker \
   -d example_data/input_files/depth_files.list \
   -l 50 \
   -o .

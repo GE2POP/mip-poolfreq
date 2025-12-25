@@ -1,73 +1,23 @@
 #!/usr/bin/env Rscript
 
-# Print full error traceback when running from command line
 options(error = function() {
   traceback(2)
   q(status = 1)
 })
 
-# v ... to replace with CLI params ... v
-## Input parameters
-# genotypeFreqEstimation_path="~/GitHub/mip-poolfreq/scripts/genotypeFreqEstimation/example_data/input_files"
-# genotyping_vcf_path=paste0(genotypeFreqEstimation_path, "/comp_genotypes.vcf")
-# allele_freqs_mixtures_path=paste0(genotypeFreqEstimation_path, "/mix_ref_all_freqs.tsv")
-# snp_depths_mixtures_path=paste0(genotypeFreqEstimation_path, "/mix_read_depths.tsv")
-# expected_freqs_mixtures_path=paste0(genotypeFreqEstimation_path, "/mix_exp_geno_freqs.tsv")
-# min_depth=40
-# allele_freqs_components_path=paste0(genotypeFreqEstimation_path, "/comp_ref_all_freqs.tsv")
-# snp_depths_components_path=paste0(genotypeFreqEstimation_path, "/comp_read_depths.tsv")
-# expected_freqs_components_path=paste0(genotypeFreqEstimation_path, "/comp_exp_geno_freqs.tsv")
-# lib_names_corresp_path=paste0(genotypeFreqEstimation_path, "/comp_libnames_corresp.tsv")
-# out_dir="~/GitHub/mip-poolfreq/scripts/genotypeFreqEstimation/example_data/output_files/compare_with_expected_frequencies"
+suppressPackageStartupMessages({
+  library(ggplot2)
+  library(glue)
+  library(multcompView)
+  library(optparse)
+  library(reshape2)
+  library(scales)
+  library(this.path)
+  library(vcfR)
+  library(zeallot)
+  library(Gfreq)
+})
 
-# genotypeFreqEstimation_path="~/MIPs/PUBLI/to_share/DATA_test3_2023_2023_197"
-# genotyping_vcf_path=paste0(genotypeFreqEstimation_path, "/GENOTYPING_MATRIX/04__Genotype_Locus1_Sample_Locus2_Filtered.vcf")
-# allele_freqs_mixtures_path=paste0(genotypeFreqEstimation_path, "/ALLELE_FREQS/ref_allelic_freqs_mixtures_targeted_filtered.tsv")
-# snp_depths_mixtures_path=paste0(genotypeFreqEstimation_path, "/ALLELE_FREQS/total_depths_mixtures_targeted_filtered.tsv")
-# expected_freqs_mixtures_path=paste0(genotypeFreqEstimation_path, "/INFO_FILES/Experiment/expectedGenoFreqs_mixtures.tsv")
-# min_depth=40
-# allele_freqs_components_path=paste0(genotypeFreqEstimation_path, "/ALLELE_FREQS/ref_allelic_freqs_components_targeted_filtered.tsv")
-# snp_depths_components_path=paste0(genotypeFreqEstimation_path, "/ALLELE_FREQS/total_depths_components_targeted_filtered.tsv")
-# expected_freqs_components_path=paste0(genotypeFreqEstimation_path, "/INFO_FILES/Experiment/expectedGenoFreqs_components.tsv")
-# lib_names_corresp_path=paste0(genotypeFreqEstimation_path, "/INFO_FILES/Experiment/corresp_comp_genotypes_libnames.tsv")
-# out_dir="~/MIPs/PUBLI/to_share/DATA_test3_2023_2023_197/GENOTYPE_FREQS/compare_with_expected_frequencies"
-
-# ^ .................................. ^
-
-## Import dependencies
-user_lib <- Sys.getenv("R_LIBS_USER")
-if (!dir.exists(user_lib)) dir.create(user_lib, recursive = TRUE)
-.libPaths(user_lib)
-
-pkgs<-c(
-  "optparse",
-  "devtools",
-  "this.path",
-  "glue",
-  "vcfR",
-  "reshape2",
-  "scales",
-  "ggplot2",
-  "multcompView",
-  "zeallot"
-)
-
-for (pkg in pkgs) {
-  if (!requireNamespace(pkg, quietly = TRUE)) {
-    message("Installing missing package: ", pkg)
-    install.packages(pkg, dependencies = TRUE)
-  }
-  library(pkg, character.only = TRUE)
-}
-
-user_dir <- getwd()
-script_dir <- dirname(this.path::this.path())
-project_root <- normalizePath(file.path(script_dir, ".."))
-setwd(project_root)
-load_all(".")
-setwd(user_dir)
-
-## Parse arguments
 option_list <- list(
   make_option(c("--vcf", "-v"), type = "character", help = "Path to genotyping VCF"),
   make_option(c("--allele_freqs_mix"), type = "character", help = "Path to allele frequencies file of mixtures (with a 'CHROM' and a 'POS' columns)"),
@@ -118,10 +68,6 @@ check_input_files(
   optional_files = optional_files
 )
 
-
-
-## Import input files
-
 inputs <- load_inputs(
   genotyping_vcf_path = genotyping_vcf_path,
   lib_names_corresp_path = lib_names_corresp_path,
@@ -134,9 +80,7 @@ inputs <- load_inputs(
   min_depth = min_depth
 )
 
-## Analysis
 
-# Create output sub-directories
 general_subdir<-glue("{out_dir}/expected_vs_estimated")
 weights_subdir<-glue("{out_dir}/weight_vector_effect")
 subsampling_subdir<-glue("{out_dir}/snp_subsampling_effect")
@@ -145,7 +89,6 @@ for (subdir in c(general_subdir, weights_subdir, subsampling_subdir)){
   dir.create(subdir)
 }
 
-# Estimate genotype frequencies, compare to expected frequencies and compute biases
 writeLines("\n\nEstimate genotype frequencies, compare to expected frequencies and compute biases:\n")
 genotype_frequencies_mixtures<-estimate_genotype_freqs(
   genotyping_matrix = inputs$genotyping_matrix, 
@@ -183,7 +126,6 @@ compute_bias(
   out_dir = general_subdir
 )
 
-# Evaluate the effect of the weight vector
 evaluate_weight_vector_effect(
   genotyping_matrix = inputs$genotyping_matrix,
   allele_freqs = inputs$allele_freqs_mixtures,
@@ -192,7 +134,6 @@ evaluate_weight_vector_effect(
   out_dir = weights_subdir
 )
 
-# Evaluate the effect of SNP sub-sampling
 evaluate_subsampling_effect(
   genotyping_matrix = inputs$genotyping_matrix,
   allele_freqs = inputs$allele_freqs_mixtures,
