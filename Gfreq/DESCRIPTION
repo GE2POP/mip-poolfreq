@@ -1,7 +1,20 @@
-Package: genotypeFreqEstimation
+Package: Gfreq
 Title: Genotype Frequency Estimation Tools
 Version: 0.0.1
+Encoding: UTF-8
 Description: Tools to estimate genotype frequencies from a genotyping matrix (VCF) and allele frequencies in variety mixtures.
 Author: Johanna Girodolle
 Maintainer: Johanna Girodolle <johanna.girodolle@outlook.com>
 License: MIT
+Imports:
+    ggplot2,
+    glue,
+    multcompView,
+    optparse,
+    reshape2,
+    scales,
+    this.path,
+    UpSetR,
+    vcfR,
+    zeallot
+RoxygenNote: 7.3.3

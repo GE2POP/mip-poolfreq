@@ -1,52 +1,19 @@
 #!/usr/bin/env Rscript
 
-# Print full error traceback when running from command line
 options(error = function() {
   traceback(2)
   q(status = 1)
 })
 
-# v ... to replace with CLI params ... v
-## Input parameters
-# genotypeFreqEstimation_path="~/GitHub/mip-poolfreq/scripts/genotypeFreqEstimation/example_data/input_files"
-# genotyping_vcf_path=paste0(genotypeFreqEstimation_path, "/comp_genotypes.vcf")
-# allele_freqs_path=paste0(genotypeFreqEstimation_path, "/mix_ref_all_freqs.tsv")
-# snp_depths_path=paste0(genotypeFreqEstimation_path, "/mix_read_depths.tsv")
-# min_depth=40
-# lib_names_corresp_path=paste0(genotypeFreqEstimation_path, "/comp_libnames_corresp.tsv")
-# output_file_name="~/GitHub/mip-poolfreq/scripts/genotypeFreqEstimation/example_data/output_files/estimate_genotype_frequencies/genotype_frequencies.tsv"
-# ^ .................................. ^
+suppressPackageStartupMessages({
+  library(optparse)
+  library(reshape2)
+  library(this.path)
+  library(vcfR)
+  library(zeallot)
+  library(Gfreq)
+})
 
-## Import dependencies
-user_lib <- Sys.getenv("R_LIBS_USER")
-if (!dir.exists(user_lib)) dir.create(user_lib, recursive = TRUE)
-.libPaths(user_lib)
-
-pkgs<-c(
-  "optparse",
-  "devtools",
-  "this.path",
-  "reshape2",
-  "vcfR",
-  "zeallot"
-)
-
-for (pkg in pkgs) {
-  if (!requireNamespace(pkg, quietly = TRUE)) {
-    message("Installing missing package: ", pkg)
-    install.packages(pkg, dependencies = TRUE)
-  }
-  library(pkg, character.only = TRUE)
-}
-
-user_dir <- getwd()
-script_dir <- dirname(this.path::this.path())
-project_root <- normalizePath(file.path(script_dir, ".."))
-setwd(project_root)
-load_all(".")
-setwd(user_dir)
-
-## Parse arguments
 option_list <- list(
   make_option(c("--vcf", "-v"), type = "character", help = "Path to genotyping VCF"),
   make_option(c("--allele_freqs", "-a"), type = "character", help = "Path to allele frequencies file (with a 'CHROM' and a 'POS' columns)"),
@@ -83,8 +50,6 @@ check_input_files(
 )
 
 
-
-## Import input files
 inputs <- load_inputs(
   genotyping_vcf_path = genotyping_vcf_path,
   lib_names_corresp_path = lib_names_corresp_path,
@@ -93,7 +58,6 @@ inputs <- load_inputs(
   min_depth = min_depth
 )
 
-## Analysis
 genotype_frequencies<-estimate_genotype_freqs(
   genotyping_matrix = inputs$genotyping_matrix, 
   allele_freqs = inputs$allele_freqs_mixtures, 

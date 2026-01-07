@@ -1,0 +1,49 @@
+#!/usr/bin/env Rscript
+
+args <- commandArgs(trailingOnly = TRUE)
+
+available_cmds <- c(
+  "estimate_genotype_frequencies",
+  "evaluate_frequency_accuracy",
+  "plot_MAF_hist",
+  "plot_depth_per_marker"
+)
+
+print_help <- function() {
+  cat("Usage:\n")
+  cat("  Gfreq <command> [options]\n\n")
+  cat("Available commands:\n")
+  for (cmd in available_cmds) {
+    cat("  -", cmd, "\n")
+  }
+  cat("\nUse:\n")
+  cat("  Gfreq <command> --help\n")
+}
+
+if (length(args) == 0 || args[1] %in% c("-h", "--help")) {
+  print_help()
+  quit(status = 0)
+}
+
+cmd <- args[1]
+sub_args <- args[-1]
+
+if (!cmd %in% available_cmds) {
+  cat("Error: unknown command:", cmd, "\n\n")
+  print_help()
+  quit(status = 1)
+}
+
+bin <- system.file("bin", cmd, package = "Gfreq")
+if (bin == "") {
+  stop(
+    paste0(
+      "Command '", cmd, "' not found inside installed Gfreq package.\n",
+      "Try reinstalling the package."
+    ),
+    call. = FALSE
+  )
+}
+
+status <- system2(bin, sub_args)
+quit(status = status)
