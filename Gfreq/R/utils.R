@@ -8,7 +8,7 @@
 #' @export
 check_missing_args <- function(args) {
   null_entries <- names(args)[vapply(args, is.null, logical(1))]
-  
+
   if (length(null_entries) > 0) {
     msg <- paste(
       "The following required argument is missing:",
@@ -72,13 +72,13 @@ vcf_to_numeric_matrix <- function(vcf_path, lib_names_corresp_path = NULL) {
   vcf <- read.vcfR(vcf_path)
   gt_matrix <- extract.gt(vcf, element = "GT")
   numeric_matrix <- apply(gt_matrix, c(1, 2), convert_gt_to_numeric)
-  
+
   if (!is.null(lib_names_corresp_path)) {
     lib_names <- read.table(lib_names_corresp_path, header = TRUE)
     rownames(lib_names) <- lib_names$Library_name
     colnames(numeric_matrix) <- lib_names[colnames(numeric_matrix), "Genotype"]
   }
-  
+
   return(numeric_matrix)
 }
 
@@ -144,10 +144,10 @@ check_columns <- function(df, required_cols) {
 #' @export
 set_rownames_from_chrom_pos <- function(df) {
   check_columns(df, c("CHROM", "POS"))
-  
+
   rownames(df) <- paste(df$CHROM, df$POS, sep = "_")
   df <- df[, !(colnames(df) %in% c("CHROM", "POS"))]
-  
+
   return(df)
 }
 
@@ -184,20 +184,20 @@ filter_lowdepth_snps<-function(depths, extra_files, min_depth){
   if (is.data.frame(extra_files)) {
     extra_files <- list(extra_files)
   }
-  
+
   snp_to_filter<-rownames(depths)[apply(depths, 1, min) < min_depth]
   n_filtered <- length(snp_to_filter)
-  
+
   filtered_dfs <- lapply(c(list(depths), extra_files), function(df) {
     df[!rownames(df) %in% snp_to_filter, ]
   })
-  
+
   if (n_filtered == 0) {
     writeLines(sprintf("No SNPs filtered (all depths ≥ %d).", min_depth))
   } else {
     writeLines(sprintf("\n\nINFO: Filtered %d SNPs with min depth < %d.", n_filtered, min_depth))
   }
-  
+
   return(filtered_dfs)
 }
 
@@ -212,7 +212,7 @@ filter_lowdepth_snps<-function(depths, extra_files, min_depth){
 #' @export
 check_identical_snps <- function(dfs, context = NULL) {
   rn_list <- lapply(dfs, rownames)
-  
+
   ref <- rn_list[[1]]
   for (i in seq_along(rn_list)[-1]) {
     if (!setequal(ref, rn_list[[i]])) {
@@ -222,7 +222,7 @@ check_identical_snps <- function(dfs, context = NULL) {
       ))
     }
   }
-  
+
   invisible(TRUE)
 }
 
@@ -272,41 +272,41 @@ load_inputs <- function(
     vcf_path = genotyping_vcf_path,
     lib_names_corresp_path = lib_names_corresp_path
   )
-  
+
   allele_freqs_mixtures <- read.table(allele_freqs_mixtures_path, header = TRUE)
   snp_depths_mixtures <- read.table(snp_depths_mixtures_path, header = TRUE)
-  
+
   allele_freqs_mixtures <- set_rownames_from_chrom_pos(allele_freqs_mixtures)
   snp_depths_mixtures <- set_rownames_from_chrom_pos(snp_depths_mixtures)
-  
+
   check_identical_snps(dfs=list(allele_freqs_mixtures, snp_depths_mixtures), context = "between mixtures all_freqs and read_depths")
-  
+
   expected_freqs_mixtures_melt <- NULL
   if (!is.null(expected_freqs_mixtures_path)) {
     expected_freqs_mixtures <- read.table(expected_freqs_mixtures_path, header = TRUE)
     expected_freqs_mixtures_melt <- melt_genotype_freqs(expected_freqs_mixtures, "ExpFreq")
   }
-  
+
   allele_freqs_components <- NULL
   snp_depths_components <- NULL
   expected_freqs_components_melt <- NULL
-  
+
   if (!is.null(allele_freqs_components_path)) {
     allele_freqs_components <- read.table(allele_freqs_components_path, header = TRUE)
     snp_depths_components <- read.table(snp_depths_components_path, header = TRUE)
-    
+
     allele_freqs_components <- set_rownames_from_chrom_pos(allele_freqs_components)
     snp_depths_components <- set_rownames_from_chrom_pos(snp_depths_components)
-    
+
     check_identical_snps(dfs=list(allele_freqs_components, snp_depths_components), context = "between components all_freqs and read_depths")
     check_identical_snps(dfs=list(allele_freqs_components, allele_freqs_mixtures), context = "between components and mixtures all_freqs")
-    
-    
+
+
     if (!is.null(expected_freqs_components_path)) {
       expected_freqs_components <- read.table(expected_freqs_components_path, header = TRUE)
       expected_freqs_components_melt <- melt_genotype_freqs(expected_freqs_components, "ExpFreq")
     }
-    
+
     c(
       snp_depths_mixtures,
       allele_freqs_mixtures,
@@ -328,7 +328,7 @@ load_inputs <- function(
       min_depth = min_depth
     )
   }
-  
+
   return(list(
     genotyping_matrix = genotyping_matrix,
     allele_freqs_mixtures = allele_freqs_mixtures,
@@ -359,13 +359,13 @@ estimate_genotype_freqs <- function(genotyping_matrix, allele_freqs, snp_depths 
   genotype_freqs <- data.frame(matrix(nrow = nb_components, ncol = nb_mixtures))
   colnames(genotype_freqs) <- colnames(allele_freqs)
   rownames(genotype_freqs) <- colnames(genotyping_matrix)
-  
+
   if (!is.null(snp_depths) && !setequal(rownames(allele_freqs), rownames(snp_depths))) {
     stop("Mismatch between SNPs in allele_freqs and snp_depths - they must be identical.")
   }
 
   common_snps <- intersect(rownames(genotyping_matrix), rownames(allele_freqs))
-  
+
   writeLines(sprintf("\nINFO: Estimating genotype frequencies with %d SNPs.", length(common_snps)))
 
   allele_freqs <- allele_freqs[common_snps,]
@@ -377,19 +377,19 @@ estimate_genotype_freqs <- function(genotyping_matrix, allele_freqs, snp_depths 
     est_freqs <- coefficients(lm(allele_freqs[, mixture_name] ~ genotyping_matrix - 1, weights = weights))
     genotype_freqs[, mixture_name] <- round(est_freqs, 4)
   }
-  
+
   genotype_freqs$Component <- rownames(genotype_freqs)
   genotype_freqs_melt <- melt(genotype_freqs, id.vars = "Component")
   colnames(genotype_freqs_melt)[2:3] <- c("Mixture", est_freq_col_name)
-  
+
   if (!is.null(expected_freqs_melt)) {
     genotype_freqs_melt <- merge(genotype_freqs_melt, expected_freqs_melt, by = c("Component", "Mixture"))
   }
-  
+
   if (!is.null(out_file)){
     write.table(genotype_freqs_melt, file = out_file, row.names = FALSE, quote = F, sep ="\t")
   }
-  
+
   return(genotype_freqs_melt)
 }
 
@@ -414,7 +414,7 @@ estimate_genotype_freqs <- function(genotyping_matrix, allele_freqs, snp_depths 
 plot_condition_effect_boxplots <- function(df_melt, x_col, y_col, fill_col, ref_col = NULL, y_lab = "", x_lab = "", fill_lab = "Group", show_zero = F) {
   # Set fill as factor to ensure ordering
   df_melt[[fill_col]] <- factor(df_melt[[fill_col]], levels = sort(unique(df_melt[[fill_col]])))
-  
+
   # Define palette
   fill_levels <- levels(df_melt[[fill_col]])
   color_palette <- scales::hue_pal()(length(fill_levels))
@@ -422,8 +422,8 @@ plot_condition_effect_boxplots <- function(df_melt, x_col, y_col, fill_col, ref_
 
   p <- ggplot(df_melt, aes_string(x = x_col, y = y_col, fill = fill_col))+
     scale_x_discrete(expand = expansion(mult = c(0, 0)))
-    
-  
+
+
   # Optional reference lines and labels
   if (!is.null(ref_col)) {
     p <- p +
@@ -441,7 +441,7 @@ plot_condition_effect_boxplots <- function(df_melt, x_col, y_col, fill_col, ref_
     p <- p +
       geom_hline(yintercept = 0, color = "grey40", linetype = "dashed", linewidth = 0.6)
   }
-  
+
   p <- p +
     geom_boxplot() +
       scale_fill_manual(values = color_palette) +
@@ -449,7 +449,7 @@ plot_condition_effect_boxplots <- function(df_melt, x_col, y_col, fill_col, ref_
       ylab(y_lab) +
       labs(fill = fill_lab) +
       theme_minimal(base_size = 16)
-  
+
   return(p)
 }
 
@@ -463,7 +463,7 @@ plot_condition_effect_boxplots <- function(df_melt, x_col, y_col, fill_col, ref_
 compare_boxplots_est_freq <- function(freqs_df, variable_name, out_file = NULL) {
   df_melt <- melt(freqs_df[, -c(1:2)], id.vars = "ExpFreq")
   colnames(df_melt)[2:3] <- c("Condition", "EstFreq")
-  
+
   p <- plot_condition_effect_boxplots(
     df_melt   = df_melt,
     x_col     = "Condition",
@@ -474,13 +474,13 @@ compare_boxplots_est_freq <- function(freqs_df, variable_name, out_file = NULL) 
     x_lab     = variable_name,
     fill_lab  = "Expected frequency"
   )
-  
+
   if (!is.null(out_file)) {
     n_conditions <- length(unique(df_melt$Condition))
     n_expFreq <- length(unique(df_melt$ExpFreq))
     ggsave(out_file, plot = p, width = 2+0.5*n_expFreq*n_conditions, height = 4, bg = "white")
   }
-  
+
   return(p)
 }
 
@@ -508,7 +508,7 @@ compute_stats_per_exp_freq <- function(freqs_df, out_dir = NULL, suffix = "") {
     write.table(output$mean, glue("{out_dir}/est_geno_freqs_mean{suffix}.tsv"), row.names = FALSE, quote = F, sep ="\t")
     write.table(output$sd, glue("{out_dir}/est_geno_freqs_sd{suffix}.tsv"), row.names = FALSE, quote = F, sep ="\t")
   }
-  
+
   return(output)
 }
 
@@ -519,38 +519,38 @@ compute_stats_per_exp_freq <- function(freqs_df, out_dir = NULL, suffix = "") {
 #' @param out_file Path to the output file to save the plot (default = NULL)
 #' @export
 plot_correlation_with_exp_freq <- function(freqs_df, extra_freqs_df = NULL, out_file = NULL) {
-  
+
   if (! is.null(out_file)) { pdf(out_file, width = 11.11, height = 8.33) }
-  
+
   for (condition in colnames(freqs_df)[!colnames(freqs_df) %in% c("Component", "Mixture", "ExpFreq")]) {
     par(
       cex.axis = 1.2,
       cex.lab = 1.4,
       cex.main = 1.5
     )
-    plot(freqs_df[, condition] ~ freqs_df$ExpFreq, pch = 16, las = 2, col = alpha("darkred", 0.3), 
+    plot(freqs_df[, condition] ~ freqs_df$ExpFreq, pch = 16, las = 2, col = alpha("darkred", 0.3),
          ylim = c(0, 1.1), xlim = c(0, 1.1), ylab = "Estimated frequencies", xlab = "Expected frequencies", main = condition)
-    
+
     if (!is.null(extra_freqs_df)) {
       points(extra_freqs_df$ExpFreq, extra_freqs_df$EstFreq, pch = 17, col = alpha("black", 0.5))
     }
-    
+
     abline(a = 0, b = 1, col = "black")
     fit <- lm(freqs_df[, condition] ~ freqs_df$ExpFreq)
     coeffs <- coef(fit)
-    
+
     if (length(unique(freqs_df$ExpFreq)) > 1) {
       abline(fit, col = "darkred")
       r2 <- cor(freqs_df[, condition], freqs_df$ExpFreq)^2
     } else {
       r2 <- NA
     }
-    
+
     text(0.2, 0.8, paste0("Slope: ", round(coeffs[2], 3)), col = "darkred")
     text(0.2, 0.75, paste0("Intercept: ", round(coeffs[1], 3)), col = "darkred")
     text(0.2, 0.7, paste0("R^2: ", round(r2, 3)), col = "darkred")
   }
-  
+
   if (! is.null(out_file)) { dev.off() }
 }
 
@@ -566,25 +566,25 @@ plot_correlation_with_exp_freq <- function(freqs_df, extra_freqs_df = NULL, out_
 #' @export
 compute_bias_from_errors <- function(freqs_df, error_col, condition) {
   stopifnot(startsWith(error_col, "error_"))
-  
+
   formula_comp <- as.formula(glue("{error_col} ~ Component"))
   formula_exp  <- as.formula(glue("{error_col} ~ ExpFreq"))
-  
+
   # comp_mean <- aggregate(formula_comp, freqs_df, mean)
   # expf_mean <- aggregate(formula_exp, freqs_df, mean)
   comp_mean <- aggregate(formula_comp, freqs_df, function(x) round(mean(x), 4))
   expf_mean <- aggregate(formula_exp, freqs_df, function(x) round(mean(x), 4))
-  
+
   aov_res <- aov(formula_comp, freqs_df)
   tukey_res <- TukeyHSD(aov_res)
   sig_groups <- multcompLetters4(aov_res, tukey_res)[[1]]$Letters
-  
+
   bias_col <- sub("^error_", "bias_", error_col)
   colnames(comp_mean)[2] <- bias_col
   colnames(expf_mean)[2] <- bias_col
-  
+
   comp_mean[[glue("{condition}_significance_group")]] <- sig_groups[comp_mean$Component]
-  
+
   return(list(
     components = comp_mean,
     exp_freqs = expf_mean
@@ -616,7 +616,7 @@ plot_error_boxplots <- function(
     fill_lab = "Component",
     show_zero = T
   )
-  
+
   p_expfreq <- plot_condition_effect_boxplots(
     df_melt = errors_long_df,
     x_col = "Condition",
@@ -627,7 +627,7 @@ plot_error_boxplots <- function(
     fill_lab = "Expected frequency",
     show_zero = T
   )
-  
+
   if (!is.null(out_dir)) {
     n_conditions <- length(unique(errors_long_df$Condition))
     n_components <- length(unique(errors_long_df$Component))
@@ -645,7 +645,7 @@ plot_error_boxplots <- function(
 #' Compute estimation bias and plot grouped error boxplots
 #'
 #' @param freqs_df Dataframe with an "ExpFreq" colomn (providing the expected frequencies), a "Component" column, and 1 or more estimated frequencies column(s)
-#' @param variable_name Label for the x-axis (e.g. name of the strategy variable) 
+#' @param variable_name Label for the x-axis (e.g. name of the strategy variable)
 #' @param out_dir Path the the output directory to write output files (default = NULL)
 #' @param suffix Suffix to add in the output file names (default = "")
 #' @return A list with bias dataframes per component and per expected frequency
@@ -657,15 +657,15 @@ compute_bias <- function(freqs_df, variable_name = "", out_dir = NULL, suffix = 
   errors_df<-freqs_df
   for (condition in est_freq_cols) {
     error_col <- glue("error_{condition}")
-    
+
     errors_df[[error_col]] <- errors_df[[condition]] - errors_df[["ExpFreq"]]
-    
+
     bias <- compute_bias_from_errors(errors_df, error_col, condition)
     components_bias <- merge(components_bias, bias$components)
     exp_freqs_bias  <- merge(exp_freqs_bias, bias$exp_freqs)
-    
+
   }
-  
+
   errors_long_df <- errors_df %>%
     tidyr::pivot_longer(
       cols = tidyselect::all_of(paste0("error_", est_freq_cols)),
@@ -674,9 +674,9 @@ compute_bias <- function(freqs_df, variable_name = "", out_dir = NULL, suffix = 
       values_to = "Error"
     ) %>%
     dplyr::mutate(Condition = factor(Condition, levels = est_freq_cols))
-  
+
   plot_error_boxplots(errors_long_df, variable_name, out_dir, suffix)
-  
+
   if (! is.null(out_dir)) {
     write.table(components_bias, glue("{out_dir}/bias_per_component{suffix}.tsv"), row.names = FALSE, quote = F, sep ="\t")
     write.table(exp_freqs_bias, glue("{out_dir}/bias_per_exp_freq{suffix}.tsv"), row.names = FALSE, quote = F, sep ="\t")
@@ -694,7 +694,7 @@ compute_bias <- function(freqs_df, variable_name = "", out_dir = NULL, suffix = 
 #' - computing estimation bias
 #'
 #' @param freqs_to_compare Dataframe with a column "ExpFreq" (providing the expected frequencies) and one column per strategy providing the estimated frequencies
-#' @param variable_name Label for the x-axis (e.g. name of the strategy variable) 
+#' @param variable_name Label for the x-axis (e.g. name of the strategy variable)
 #' @param suffix Suffix to add in the output file names
 #' @param out_dir Path to the output directory to write result files (plots and tables)
 #'
@@ -710,27 +710,27 @@ compare_different_est_freqs<-function(freqs_to_compare, variable_name, out_dir, 
     variable_name = variable_name,
     out_file = glue("{out_dir}/est_geno_freqs_boxplot{suffix}.png")
   )
-  
+
   stats <- compute_stats_per_exp_freq(
     freqs_df = freqs_to_compare,
     out_dir = out_dir,
     suffix = suffix
   )
-  
+
   plot_correlation_with_exp_freq(
     freqs_df = freqs_to_compare,
     out_file = glue("{out_dir}/est_exp_freqs_scatterplot{suffix}.pdf")
   )
-  
+
   bias <- compute_bias(
     freqs_df = freqs_to_compare,
     variable_name = variable_name,
     out_dir = out_dir,
     suffix = suffix
   )
-  
+
   return(list(stats = stats, bias = bias))
-  
+
 }
 
 
@@ -745,8 +745,8 @@ compare_different_est_freqs<-function(freqs_to_compare, variable_name, out_dir, 
 #' @param allele_freqs Allele frequency matrix (SNPs x mixtures)
 #' @param snp_depths Read depths matrix (SNPs x mixtures)
 #' @param expected_freqs_melt Melted dataframe of expected genotype frequencies
-#' @param out_dir Path the the output directory to write output files 
-#' 
+#' @param out_dir Path the the output directory to write output files
+#'
 #' @return A named list with two elements:
 #' \describe{
 #'   \item{stats}{A list of dataframes from \code{compute_stats_per_exp_freq()}: mean and standard deviation per expected frequency}
@@ -755,7 +755,7 @@ compare_different_est_freqs<-function(freqs_to_compare, variable_name, out_dir, 
 #' @export
 evaluate_weight_vector_effect<-function(genotyping_matrix, allele_freqs, snp_depths, expected_freqs_melt, out_dir){
   writeLines("\n\nCompare the effect of the weight vector on genotype frequency estimation:\n")
-  
+
   freqs_depth_weight<-estimate_genotype_freqs(
     genotyping_matrix = genotyping_matrix,
     allele_freqs = allele_freqs,
@@ -770,7 +770,7 @@ evaluate_weight_vector_effect<-function(genotyping_matrix, allele_freqs, snp_dep
     est_freq_col_name = "none"
   )
   freqs_to_compare<-merge(freqs_depth_weight, freqs_no_weight)
-  
+
   stats<-compare_different_est_freqs(
     freqs_to_compare = freqs_to_compare,
     variable_name = "Weight vector",
@@ -791,15 +791,15 @@ evaluate_weight_vector_effect<-function(genotyping_matrix, allele_freqs, snp_dep
 #' @return Dataframe of estimated frequencies per condition
 #' @export
 estimate_geno_freqs_snps_subsampling <- function(genotyping_matrix, allele_freqs, step_size, snp_depths = NULL, expected_freqs_melt = NULL) {
-  
+
   common_snps <- intersect(rownames(genotyping_matrix), rownames(allele_freqs))
   total_nb_snps <- length(common_snps)
   nb_snps_to_sample<-unique(c(seq(step_size, total_nb_snps, by = step_size), total_nb_snps))
-  
+
   subsampled_genotype_freqs <- data.frame(Mixture = colnames(allele_freqs))
-  
-  
-  
+
+
+
   for (nb_snps in nb_snps_to_sample) {
     condition <- glue("{nb_snps}_SNPs")
     snps <- sample(common_snps, nb_snps)
@@ -808,7 +808,7 @@ estimate_geno_freqs_snps_subsampling <- function(genotyping_matrix, allele_freqs
     } else {
       snp_depths_subset<-NULL
     }
-    
+
     genotype_freqs <- estimate_genotype_freqs(
       genotyping_matrix = genotyping_matrix[snps,],
       allele_freqs = allele_freqs[snps,],
@@ -816,10 +816,10 @@ estimate_geno_freqs_snps_subsampling <- function(genotyping_matrix, allele_freqs
       expected_freqs_melt = expected_freqs_melt,
       est_freq_col_name = condition
       )
-    
+
     subsampled_genotype_freqs <- merge(subsampled_genotype_freqs, genotype_freqs)
   }
-  
+
   return(subsampled_genotype_freqs)
 }
 
@@ -846,15 +846,15 @@ estimate_geno_freqs_snps_subsampling <- function(genotyping_matrix, allele_freqs
 #' @export
 evaluate_subsampling_effect<-function(genotyping_matrix, allele_freqs, snp_depths, expected_freqs_melt, step_size, out_dir){
   writeLines("\n\nCompare the effect of random SNP subsampling on genotype frequency estimation:\n")
-  
+
   freqs_to_compare_subsampling<-estimate_geno_freqs_snps_subsampling(
-    genotyping_matrix = genotyping_matrix, 
-    allele_freqs = allele_freqs, 
-    snp_depths = snp_depths, 
-    expected_freqs_melt = expected_freqs_melt, 
+    genotyping_matrix = genotyping_matrix,
+    allele_freqs = allele_freqs,
+    snp_depths = snp_depths,
+    expected_freqs_melt = expected_freqs_melt,
     step_size = step_size
   )
-  
+
   stats<-compare_different_est_freqs(
     freqs_to_compare = freqs_to_compare_subsampling,
     variable_name = "Number of SNPs",
@@ -881,8 +881,8 @@ plot_MAF_hist<-function(vcf, x_lim_values, out_dir = NULL){
   maf <- as.data.frame(cbind(row.names(maf), maf[,"Frequency"]), stringsAsFactors = F)
   colnames(maf)<-c("CHR_POS", "MAF")
   maf$MAF<-as.numeric(maf$MAF)
-  
-  
+
+
   if (!is.null(out_dir)){ png(glue("{out_dir}/MAF_hist.png"), width = 800, height = 600) }
   par(
     cex.axis = 1.2,
@@ -897,7 +897,7 @@ plot_MAF_hist<-function(vcf, x_lim_values, out_dir = NULL){
        xlim = c(min_x_lim, max_x_lim),
        xaxt = "n")
   axis(1, at = seq(min_x_lim, max_x_lim, by = 0.1))
-  if (!is.null(out_dir)){ 
+  if (!is.null(out_dir)){
     dev.off()
     write.table(maf, glue("{out_dir}/MAFs.tsv"), row.names = FALSE, quote = F, sep ="\t")
     writeLines(c(
@@ -910,7 +910,7 @@ plot_MAF_hist<-function(vcf, x_lim_values, out_dir = NULL){
   } else {
       return(maf)
     }
-  
+
 }
 
 
@@ -923,12 +923,12 @@ plot_MAF_hist<-function(vcf, x_lim_values, out_dir = NULL){
 plot_marker_set_intersections <- function(numeric_matrix, out_file = NULL) {
 
   df <- as.data.frame(numeric_matrix, stringsAsFactors = FALSE)
-  
+
   non_binary_rows <- apply(df, 1, function(row) {
     vals <- suppressWarnings(as.numeric(row))
     any(!(vals %in% c(0, 1)), na.rm = TRUE)
   })
-  
+
   nb_removed <- sum(non_binary_rows)
   if (nb_removed > 0) {
     warning(sprintf("[%s] Removed %d marker(s) presenting genotyping values other than 0/1.",
@@ -936,11 +936,11 @@ plot_marker_set_intersections <- function(numeric_matrix, out_file = NULL) {
             call. = FALSE)
     df <- df[!non_binary_rows, , drop = FALSE]
   }
-  
+
   df[] <- lapply(df, function(x) ifelse(is.na(x), 0L, as.integer(x)))
-  
+
   if (!is.null(out_file)) { png(out_file, width = 1600, height = 1000, res = 150) }
-  
+
   p<-upset(
     df,
     nsets = ncol(df),
@@ -950,7 +950,7 @@ plot_marker_set_intersections <- function(numeric_matrix, out_file = NULL) {
     text.scale = 1.8
   )
   print(p)
-  
+
   if (!is.null(out_file)) {
     dev.off()
     writeLines(c("", "Output file saved in:", out_file, ""))
@@ -973,7 +973,7 @@ compute_errors <- function(freqs_df, out_dir = NULL, suffix = "") {
     errors_df[[error_col]] <- errors_df[[condition]] - errors_df[["ExpFreq"]]
   }
   errors_df<-errors_df[,!(names(errors_df) %in% c("ExpFreq", est_freq_cols))]
-  
+
   if (! is.null(out_dir)) {
     write.table(errors_df, glue("{out_dir}/errors{suffix}.tsv"), row.names = FALSE, quote = F, sep ="\t")
   }
@@ -990,10 +990,10 @@ compute_errors <- function(freqs_df, out_dir = NULL, suffix = "") {
 merge_depth_files <- function(depth_list) {
   files <- readLines(depth_list)
   files <- files[files != ""]
-  
+
   merged <- read.table(files[1], header = TRUE, sep = "\t", stringsAsFactors = FALSE)
   key_cols <- colnames(merged)[1:2]
-  
+
   for (f in files[-1]) {
     df <- read.table(f, header = TRUE, sep = "\t", stringsAsFactors = FALSE)
     merged <- merge(merged, df, by = key_cols, all = TRUE)
@@ -1024,10 +1024,10 @@ clean_depth_file <- function(depths){
 plot_depth_per_marker <- function(depths, hline = NULL, out_file = NULL) {
   depths <- clean_depth_file(depths)
   depths <- depths[names(sort(rowMeans(depths))), ]
-  
+
   df_long <- melt(as.matrix(depths))
   colnames(df_long) <- c("Marker", "Sample", "Depth")
-  
+
   p <- ggplot(df_long, aes(x = Marker, y = Depth, fill = "skyblue")) +
     geom_boxplot(outlier.size = 0.5, color="grey30", fill="skyblue") +
     theme_minimal(base_size = 16) +
@@ -1038,14 +1038,14 @@ plot_depth_per_marker <- function(depths, hline = NULL, out_file = NULL) {
       plot.title = element_text(hjust = 0.5)
     ) +
     labs(x = "Markers", y = "Depth", title = "Distribution of depth per marker")
-  
+
   if (!is.null(hline)) {
     p <- p + geom_hline(yintercept = hline, linetype = "dashed", color = "orange") +
       annotate("text", x = -Inf, y = hline, label = hline,
                hjust = 1.45, vjust = +0.4, color="orange", cex=3.2) +
       coord_cartesian(clip="off")
   }
-  
+
   if (!is.null(out_file)) {
     ggsave(out_file, p, width = 10, height = 8, dpi = 300, bg = "white")
     writeLines(c("", "Output file saved in:", out_file, ""))

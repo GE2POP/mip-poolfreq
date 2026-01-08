@@ -21,39 +21,8 @@ option_list <- list(
 
 opt <- parse_args(OptionParser(option_list = option_list))
 
-depth_list <- opt$depth_files_list
-hline <- opt$hline
-out_dir <- opt$out_dir
-
-
-required_files <- list(
-  depth_list = depth_list,
-  out_dir = out_dir
+depth_per_marker_pipeline(
+  depth_list = opt$depth_files_list,
+  hline = opt$hline,
+  out_dir = opt$out_dir
 )
-
-optional_files <- list(
-  
-)
-
-check_missing_args(args = required_files)
-
-check_input_files(
-  required_files = required_files,
-  optional_files = optional_files
-)
-
-depths<-merge_depth_files(
-  depth_list = depth_list
-)
-
-compute_mean_depth_per_marker(
-  depths=depths,
-  out_file=glue("{out_dir}/mean_depth_per_marker.tsv")
-)
-
-plot_depth_per_marker(
-  depths=depths,
-  hline=hline,
-  out_file=glue("{out_dir}/depth_per_marker_boxplots.png")
-)
-

@@ -25,42 +25,11 @@ option_list <- list(
 
 opt <- parse_args(OptionParser(option_list = option_list))
 
-genotyping_vcf_path <- opt$vcf
-allele_freqs_path <- opt$allele_freqs
-snp_depths_path <- opt$depths
-min_depth <- opt$min_depth
-lib_names_corresp_path <- opt$libs
-output_file_name <- opt$output_file
-
-required_files <- list(
-  vcf = genotyping_vcf_path,
-  allele_freqs = allele_freqs_path,
-  depths = snp_depths_path
-)
-
-optional_files <- list(
-  libs = lib_names_corresp_path
-)
-
-check_missing_args(args = c(required_files, output_file_name = output_file_name, min_depth = min_depth))
-
-check_input_files(
-  required_files = required_files,
-  optional_files = optional_files
-)
-
-
-inputs <- load_inputs(
-  genotyping_vcf_path = genotyping_vcf_path,
-  lib_names_corresp_path = lib_names_corresp_path,
-  allele_freqs_mixtures_path = allele_freqs_path,
-  snp_depths_mixtures_path = snp_depths_path,
-  min_depth = min_depth
-)
-
-genotype_frequencies<-estimate_genotype_freqs(
-  genotyping_matrix = inputs$genotyping_matrix, 
-  allele_freqs = inputs$allele_freqs_mixtures, 
-  snp_depths = inputs$snp_depths_mixtures,
-  out_file = output_file_name
+estimate_genotype_frequencies_pipeline(
+  genotyping_vcf_path = opt$vcf,
+  allele_freqs_path = opt$allele_freqs,
+  snp_depths_path = opt$depths,
+  lib_names_corresp_path = opt$libs,
+  min_depth = opt$min_depth,
+  output_file_name = opt$output_file
 )

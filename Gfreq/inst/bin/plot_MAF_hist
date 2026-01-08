@@ -22,39 +22,8 @@ option_list <- list(
 
 opt <- parse_args(OptionParser(option_list = option_list))
 
-genotyping_vcf_path <- opt$vcf
-lib_names_corresp_path <- opt$libs
-out_dir <- opt$out_dir
-
-required_files <- list(
-  vcf = genotyping_vcf_path,
-  out_dir = out_dir
-)
-
-optional_files <- list(
-  libs = lib_names_corresp_path
-)
-
-check_missing_args(args = required_files)
-
-check_input_files(
-  required_files = required_files,
-  optional_files = optional_files
-)
-
-vcf <- read.vcfR(genotyping_vcf_path)
-majmin_gt_matrix<-vcf_to_majmin_num_gt_matrix(
-  vcf_path = genotyping_vcf_path,
-  lib_names_corresp_path = lib_names_corresp_path
-)
-
-plot_MAF_hist(
-  vcf = vcf, 
-  x_lim_values = c(0, 0.5),
-  out_dir = out_dir
-)
-
-plot_marker_set_intersections(
-  numeric_matrix = majmin_gt_matrix,
-  out_file = glue("{out_dir}/market_set_upsetplot.png")
+MAF_hist_pipeline(
+  genotyping_vcf_path = opt$vcf,
+  lib_names_corresp_path = opt$libs,
+  out_dir = opt$out_dir
 )
