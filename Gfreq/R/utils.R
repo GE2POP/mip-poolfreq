@@ -397,6 +397,41 @@ estimate_genotype_freqs <- function(genotyping_matrix, allele_freqs, snp_depths 
 
 # -----
 
+#' Force alphabetical ordering of a column based on labels
+#'
+#' @param x A vector (character or factor).
+#'
+#' @return A factor with levels sorted alphabetically.
+#' @export
+factor_alphabetical <- function(x) {
+  x_chr <- as.character(x)
+  factor(x_chr, levels = sort(unique(x_chr)))
+}
+
+#' Convert a vector to a factor with an explicit level order
+#'
+#' @param x A vector (character or factor).
+#' @param levels Character vector defining the desired order.
+#'
+#' @return A factor with levels ordered as provided.
+#' @export
+factor_with_levels <- function(x, levels) {
+  x_chr <- as.character(x)
+
+  missing_levels <- setdiff(unique(x_chr), levels)
+  if (length(missing_levels) > 0) {
+    stop(
+      sprintf(
+        "Provided levels are missing value(s): %s",
+        paste(missing_levels, collapse = ", ")
+      ),
+      call. = FALSE
+    )
+  }
+
+  factor(x_chr, levels = levels)
+}
+
 #' Plot boxplots across varying conditions
 #'
 #' @param df_melt Data frame in long format
@@ -412,8 +447,16 @@ estimate_genotype_freqs <- function(genotyping_matrix, allele_freqs, snp_depths 
 #' @return A ggplot object
 #' @export
 plot_condition_effect_boxplots <- function(df_melt, x_col, y_col, fill_col, ref_col = NULL, y_lab = "", x_lab = "", fill_lab = "Group", show_zero = F) {
-  # Set fill as factor to ensure ordering
-  df_melt[[fill_col]] <- factor(df_melt[[fill_col]], levels = sort(unique(df_melt[[fill_col]])))
+  # Order legend and conditions
+  df_melt[[fill_col]] <- factor_alphabetical(df_melt[[fill_col]])
+
+  condition_levels <- attr(df_melt, "condition_levels")
+
+  if (!is.null(condition_levels)) {
+    df_melt[[x_col]] <- factor_with_levels(df_melt[[x_col]], levels = condition_levels)
+  } else {
+      df_melt[[x_col]] <- factor_alphabetical(df_melt[[x_col]])
+  }
 
   # Define palette
   fill_levels <- levels(df_melt[[fill_col]])
@@ -463,6 +506,8 @@ plot_condition_effect_boxplots <- function(df_melt, x_col, y_col, fill_col, ref_
 compare_boxplots_est_freq <- function(freqs_df, variable_name, out_file = NULL) {
   df_melt <- melt(freqs_df[, -c(1:2)], id.vars = "ExpFreq")
   colnames(df_melt)[2:3] <- c("Condition", "EstFreq")
+  attr(df_melt, "condition_levels") <- attr(freqs_df, "condition_levels")
+
 
   p <- plot_condition_effect_boxplots(
     df_melt   = df_melt,
@@ -717,8 +762,9 @@ compute_bias <- function(freqs_df, variable_name = "", out_dir = NULL, suffix = 
       names_to = "Condition",
       names_prefix = "error_",
       values_to = "Error"
-    ) %>%
-    dplyr::mutate(Condition = factor(Condition, levels = est_freq_cols))
+    )
+
+  attr(errors_long_df, "condition_levels") <- attr(freqs_df, "condition_levels")
 
   plot_error_boxplots(errors_long_df, variable_name, out_dir, suffix)
 
@@ -816,6 +862,8 @@ evaluate_weight_vector_effect<-function(genotyping_matrix, allele_freqs, snp_dep
   )
   freqs_to_compare<-merge(freqs_depth_weight, freqs_no_weight)
 
+  attr(freqs_to_compare, "condition_levels") <- c("none", "read_depth")
+
   stats<-compare_different_est_freqs(
     freqs_to_compare = freqs_to_compare,
     variable_name = "Weight vector",
@@ -841,9 +889,9 @@ estimate_geno_freqs_snps_subsampling <- function(genotyping_matrix, allele_freqs
   total_nb_snps <- length(common_snps)
   nb_snps_to_sample<-unique(c(seq(step_size, total_nb_snps, by = step_size), total_nb_snps))
 
+  condition_levels <- paste0(nb_snps_to_sample, "_SNPs")
+
   subsampled_genotype_freqs <- data.frame(Mixture = colnames(allele_freqs))
-
-
 
   for (nb_snps in nb_snps_to_sample) {
     condition <- glue("{nb_snps}_SNPs")
@@ -864,6 +912,8 @@ estimate_geno_freqs_snps_subsampling <- function(genotyping_matrix, allele_freqs
 
     subsampled_genotype_freqs <- merge(subsampled_genotype_freqs, genotype_freqs)
   }
+
+  attr(subsampled_genotype_freqs, "condition_levels") <- condition_levels
 
   return(subsampled_genotype_freqs)
 }
