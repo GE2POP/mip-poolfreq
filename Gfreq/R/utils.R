@@ -512,6 +512,57 @@ compute_stats_per_exp_freq <- function(freqs_df, out_dir = NULL, suffix = "") {
   return(output)
 }
 
+#' Add linear model annotation to an existing plot
+#'
+#' @param fit A fitted lm object
+#' @param col Text color (default = "darkred")
+#' @param cex Text size (default = 1)
+#' @param x_offset Relative x offset from the left (default = 0.05)
+#' @param y_offset Relative y offset from the top (default = 0.05)
+#'
+#' @return NULL
+add_lm_annotation <- function(
+  fit,
+  col = "darkred",
+  cex = 1,
+  x_offset = 0.05,
+  y_offset = 0.05
+) {
+  stopifnot(inherits(fit, "lm"))
+
+  coeffs <- coef(fit)
+  r2 <- summary(fit)$r.squared
+
+  usr <- par("usr")
+  x_pos <- usr[1] + x_offset * (usr[2] - usr[1])
+  y_pos <- usr[4] - y_offset * (usr[4] - usr[3])
+
+  text(
+    x_pos,
+    y_pos,
+    labels = bquote(
+      y == .(round(coeffs[1], 3)) + .(round(coeffs[2], 3)) * x
+    ),
+    adj = c(0, 1),
+    col = col,
+    cex = cex
+  )
+
+  text(
+    x_pos,
+    y_pos - 0.08 * (usr[4] - usr[3]),
+    labels = bquote(
+      R^2 == .(round(r2, 3))
+    ),
+    adj = c(0, 1),
+    col = col,
+    cex = cex
+  )
+
+  invisible(NULL)
+}
+
+
 #' Plot estimated vs expected frequencies with regression
 #'
 #' @param freqs_df Dataframe with an "ExpFreq" colomn (providing the expected frequencies) and 1 or more estimated frequencies column(s)
@@ -541,14 +592,8 @@ plot_correlation_with_exp_freq <- function(freqs_df, extra_freqs_df = NULL, out_
 
     if (length(unique(freqs_df$ExpFreq)) > 1) {
       abline(fit, col = "darkred")
-      r2 <- cor(freqs_df[, condition], freqs_df$ExpFreq)^2
-    } else {
-      r2 <- NA
+      add_lm_annotation(fit)
     }
-
-    text(0.2, 0.8, paste0("Slope: ", round(coeffs[2], 3)), col = "darkred")
-    text(0.2, 0.75, paste0("Intercept: ", round(coeffs[1], 3)), col = "darkred")
-    text(0.2, 0.7, paste0("R^2: ", round(r2, 3)), col = "darkred")
   }
 
   if (! is.null(out_file)) { dev.off() }
