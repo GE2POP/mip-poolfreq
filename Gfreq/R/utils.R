@@ -366,8 +366,8 @@ estimate_genotype_freqs <- function(genotyping_matrix, allele_freqs, snp_depths 
 
   common_snps <- intersect(rownames(genotyping_matrix), rownames(allele_freqs))
 
-  writeLines(sprintf("\nINFO: Estimating genotype frequencies with %d SNPs.", length(common_snps)))
-
+  message(sprintf("Estimating genotype frequencies with %d SNPs.", length(common_snps)))
+  
   allele_freqs <- allele_freqs[common_snps,]
   genotyping_matrix <- genotyping_matrix[common_snps,]
   snp_depths <- if (!is.null(snp_depths)) snp_depths[common_snps,] else NULL
@@ -432,6 +432,78 @@ factor_with_levels <- function(x, levels) {
   factor(x_chr, levels = levels)
 }
 
+#' Plot boxplots for a long-format dataset
+#'
+#' @param df Long-format dataframe.
+#' @param x_col String. Column name used for the x-axis (grouping variable).
+#' @param y_col String. Column name used for the y-axis (numeric variable).
+#' @param x_lab String. Label for the x-axis.
+#' @param y_lab String. Label for the y-axis.
+#' @param title String. Plot title.
+#' @param subtitle Optional string. Plot subtitle (default = NULL).
+#' @param hline Optional numeric value for a horizontal reference line (default = NULL).
+#' @param show_x_labels Logical. Whether to display x-axis labels (default = TRUE).
+#' @param out_file Optional path to save the plot as a PNG. If NULL, the plot is printed.
+#'
+#' @return A ggplot object (printed or saved).
+#' @export
+plot_boxplots <- function(
+    df,
+    x_col,
+    y_col,
+    x_lab,
+    y_lab,
+    title,
+    subtitle = NULL,
+    hline = NULL,
+    show_x_labels = TRUE,
+    out_file = NULL
+) {
+  
+  check_columns(df, c(x_col, y_col))
+  
+  p <- ggplot(df, aes(x = .data[[x_col]], y = .data[[y_col]])) +
+    geom_boxplot(outlier.size = 0.5, color = "grey30", fill = "skyblue") +
+    theme_minimal(base_size = 16) +
+    theme(
+      panel.grid.major.x = element_blank(),
+      plot.title = element_text(hjust = 0.5)
+    ) +
+    labs(
+      x = x_lab,
+      y = y_lab,
+      title = title,
+      subtitle = subtitle
+    )
+  
+  if (!is.null(hline)) {
+    p <- p + geom_hline(yintercept = hline, linetype = "dashed", color = "orange") +
+      annotate("text", x = -Inf, y = hline, label = hline,
+               hjust = 1.45, vjust = +0.4, color="orange", cex=3.2) +
+      coord_cartesian(clip="off")
+  }
+  
+  if (!isTRUE(show_x_labels)) {
+    p <- p +
+      theme(
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank()
+      )
+  } else {
+    p <- p +
+      theme(
+        axis.text.x = element_text(angle = 45, hjust = 1, size = 8)
+      )
+  }
+  
+  if (!is.null(out_file)) {
+    ggsave(out_file, p, width = 10, height = 8, dpi = 300, bg = "white")
+    writeLines(c("", "Output file saved in:", out_file, ""))
+  } else {
+    print(p)
+  }
+}
+
 #' Plot boxplots across varying conditions
 #'
 #' @param df_melt Data frame in long format
@@ -463,21 +535,31 @@ plot_condition_effect_boxplots <- function(df_melt, x_col, y_col, fill_col, ref_
   color_palette <- scales::hue_pal()(length(fill_levels))
   names(color_palette) <- fill_levels
 
-  p <- ggplot(df_melt, aes_string(x = x_col, y = y_col, fill = fill_col))+
+  p <- ggplot(df_melt, aes(x = .data[[x_col]], y = .data[[y_col]], fill = .data[[fill_col]]))+
     scale_x_discrete(expand = expansion(mult = c(0, 0)))
 
 
   # Optional reference lines and labels
   if (!is.null(ref_col)) {
+    ref_vals <- as.numeric(as.character(df_melt[[ref_col]]))
     p <- p +
-      geom_hline(aes_string(yintercept = paste0("as.numeric(as.character(", ref_col, "))"),
-                            color = fill_col),
-                 linetype = "dashed") +
-      geom_text(aes_string(x = 0,
-                           y = paste0("as.numeric(as.character(", ref_col, "))"),
-                           label = ref_col,
-                           color = fill_col),
-                hjust = 0, vjust = -0.5, size = 3) +
+      geom_hline(
+        aes(
+          yintercept = ref_vals,
+          color = .data[[fill_col]]),
+          linetype = "dashed"
+        ) +
+      geom_text(
+        aes(
+          x = 0,
+          y = ref_vals,
+          label = .data[[ref_col]],
+          color = .data[[fill_col]]
+        ),
+        hjust = 0,
+        vjust = -0.5,
+        size = 3
+      ) +
       scale_color_manual(values = color_palette, guide = "none")
   }
   if (isTRUE(show_zero)) {
@@ -495,6 +577,7 @@ plot_condition_effect_boxplots <- function(df_melt, x_col, y_col, fill_col, ref_
 
   return(p)
 }
+
 
 #' Plot boxplots of (1 or more sets of) estimated frequencies by expected frequencies
 #'
@@ -523,7 +606,7 @@ compare_boxplots_est_freq <- function(freqs_df, variable_name, out_file = NULL) 
   if (!is.null(out_file)) {
     n_conditions <- length(unique(df_melt$Condition))
     n_expFreq <- length(unique(df_melt$ExpFreq))
-    ggsave(out_file, plot = p, width = 2+0.5*n_expFreq*n_conditions, height = 4, bg = "white")
+    ggsave(out_file, plot = p, width = min(49, 2+0.5*n_expFreq*n_conditions), height = 4, bg = "white")
   }
 
   return(p)
@@ -660,8 +743,6 @@ compute_bias_from_errors <- function(freqs_df, error_col, condition) {
   formula_comp <- as.formula(glue("{error_col} ~ Component"))
   formula_exp  <- as.formula(glue("{error_col} ~ ExpFreq"))
 
-  # comp_mean <- aggregate(formula_comp, freqs_df, mean)
-  # expf_mean <- aggregate(formula_exp, freqs_df, mean)
   comp_mean <- aggregate(formula_comp, freqs_df, function(x) round(mean(x), 4))
   expf_mean <- aggregate(formula_exp, freqs_df, function(x) round(mean(x), 4))
 
@@ -722,14 +803,13 @@ plot_error_boxplots <- function(
     n_conditions <- length(unique(errors_long_df$Condition))
     n_components <- length(unique(errors_long_df$Component))
     n_expFreq <- length(unique(errors_long_df$ExpFreq))
-    ggsave(glue("{out_dir}/error_by_component{suffix}.png"), p_component, width = 3+0.5*n_components*n_conditions, height = 4, dpi = 300, bg = "white")
-    ggsave(glue("{out_dir}/error_by_exp_freq{suffix}.png"), p_expfreq, width = 3+0.5*n_expFreq*n_conditions, height = 4, dpi = 300, bg = "white")
+    ggsave(glue("{out_dir}/error_by_component{suffix}.png"), p_component, width = min(49, 3+0.5*n_components*n_conditions), height = 4, dpi = 300, bg = "white")
+    ggsave(glue("{out_dir}/error_by_exp_freq{suffix}.png"), p_expfreq, width = min(49, 3+0.5*n_expFreq*n_conditions), height = 4, dpi = 300, bg = "white")
   } else {
     print(p_component)
     print(p_expfreq)
   }
 }
-
 
 
 #' Compute estimation bias and plot grouped error boxplots
@@ -880,14 +960,17 @@ evaluate_weight_vector_effect<-function(genotyping_matrix, allele_freqs, snp_dep
 #' @param allele_freqs Allele frequency matrix (SNPs x mixtures)
 #' @param step_size Number of SNPs to increment by when subsampling
 #' @param snp_depths Read depths matrix (SNPs x mixtures) (default = NULL)
-#' @param expected_freqs_melt Melted dataframe of expected genotype frequencies (default = NULL)
+#' @param expected_freqs_melt Melted dataframe of expected genotype frequencies
 #' @return Dataframe of estimated frequencies per condition
 #' @export
-estimate_geno_freqs_snps_subsampling <- function(genotyping_matrix, allele_freqs, step_size, snp_depths = NULL, expected_freqs_melt = NULL) {
+estimate_geno_freqs_snps_subsampling <- function(genotyping_matrix, allele_freqs, step_size, snp_depths = NULL, expected_freqs_melt) {
 
   common_snps <- intersect(rownames(genotyping_matrix), rownames(allele_freqs))
   total_nb_snps <- length(common_snps)
-  nb_snps_to_sample<-unique(c(seq(step_size, total_nb_snps, by = step_size), total_nb_snps))
+  nb_snps_to_sample <- unique(c(
+    seq(from = max(5, step_size), to = total_nb_snps, by = step_size),
+    total_nb_snps
+  ))
 
   condition_levels <- paste0(nb_snps_to_sample, "_SNPs")
 
@@ -918,6 +1001,59 @@ estimate_geno_freqs_snps_subsampling <- function(genotyping_matrix, allele_freqs
   return(subsampled_genotype_freqs)
 }
 
+#' Estimate genotype frequency errors under SNP subsampling with replicates
+#' @param genotyping_matrix Genotyping matrix with values 1 (hom. REF), 0.5 (het), and 0 (hom. ALT) (SNPs x components)
+#' @param allele_freqs Allele frequency matrix (SNPs x mixtures)
+#' @param step_size Number of SNPs to increment by when subsampling
+#' @param snp_depths Read depths matrix (SNPs x mixtures) (default = NULL)
+#' @param nb_reps Integer. Number of random subsampling replicates per SNP subset size (default = 5).
+#' @param expected_freqs_melt Melted dataframe of expected genotype frequencies
+#' @return A dataframe of the estimation errors
+#' @export
+estimate_freq_errors_subsampling <- function(genotyping_matrix, allele_freqs, step_size, nb_reps=5, snp_depths = NULL, expected_freqs_melt) {
+  
+  common_snps <- intersect(rownames(genotyping_matrix), rownames(allele_freqs))
+  total_nb_snps <- length(common_snps)
+  nb_snps_to_sample <- unique(c(
+    seq(from = max(5, step_size), to = total_nb_snps, by = step_size),
+    total_nb_snps
+  ))
+  
+  res <- vector("list", length(nb_snps_to_sample) * nb_reps)
+  k <- 0L
+  
+  for (nb_snps in nb_snps_to_sample) {
+    for (rep in 1:nb_reps){
+      k <- k + 1L
+      snps <- sample(common_snps, nb_snps)
+      if (! is.null(snp_depths)){
+        snp_depths_subset<-snp_depths[snps,]
+      } else {
+        snp_depths_subset<-NULL
+      }
+      
+      genotype_freqs <- suppressMessages(
+        estimate_genotype_freqs(
+          genotyping_matrix = genotyping_matrix[snps,],
+          allele_freqs = allele_freqs[snps,],
+          snp_depths = snp_depths_subset,
+          expected_freqs_melt = expected_freqs_melt
+        )
+      )
+      errors <- genotype_freqs$EstFreq - genotype_freqs$ExpFreq
+      
+      res[[k]] <- data.frame(
+        nb_SNPs = nb_snps,
+        replicate = rep,
+        error = errors
+      )
+    }
+  }
+  errors <- do.call(rbind, res)
+  errors$nb_SNPs <- factor(errors$nb_SNPs, levels = nb_snps_to_sample)
+  return(errors)
+}
+
 #' Evaluate the effect of SNP subsampling on genotype frequency estimation
 #'
 #' This function evaluates the impact of subsampling different numbers of SNPs on the estimation
@@ -931,6 +1067,7 @@ estimate_geno_freqs_snps_subsampling <- function(genotyping_matrix, allele_freqs
 #' @param snp_depths Read depths matrix (SNPs x mixtures)
 #' @param expected_freqs_melt Melted dataframe of expected genotype frequencies
 #' @param step_size Number of SNPs to increment by when subsampling
+#' @param nb_reps Integer. Number of random subsampling replicates per SNP subset size (default = 5).
 #' @param out_dir Path to the output directory to save plots and result files
 #'
 #' @return A named list with two elements:
@@ -939,7 +1076,7 @@ estimate_geno_freqs_snps_subsampling <- function(genotyping_matrix, allele_freqs
 #'   \item{bias}{A list of dataframes from \code{compute_bias()}: bias per component and per expected frequency}
 #' }
 #' @export
-evaluate_subsampling_effect<-function(genotyping_matrix, allele_freqs, snp_depths, expected_freqs_melt, step_size, out_dir){
+evaluate_subsampling_effect<-function(genotyping_matrix, allele_freqs, snp_depths, expected_freqs_melt, step_size, nb_reps=5, out_dir){
   writeLines("\n\nCompare the effect of random SNP subsampling on genotype frequency estimation:\n")
 
   freqs_to_compare_subsampling<-estimate_geno_freqs_snps_subsampling(
@@ -950,14 +1087,35 @@ evaluate_subsampling_effect<-function(genotyping_matrix, allele_freqs, snp_depth
     step_size = step_size
   )
 
-  stats<-compare_different_est_freqs(
+  compare_different_est_freqs(
     freqs_to_compare = freqs_to_compare_subsampling,
     variable_name = "Number of SNPs",
     out_dir = out_dir,
     suffix = "_subsampling_effect"
   )
-  return(stats)
+
+  errors<-estimate_freq_errors_subsampling(
+    genotyping_matrix = genotyping_matrix,
+    allele_freqs = allele_freqs,
+    snp_depths = snp_depths,
+    expected_freqs_melt = expected_freqs_melt,
+    step_size = step_size,
+    nb_reps = nb_reps
+  )
+  
+  plot_boxplots(
+    df = errors,
+    x_col = "nb_SNPs",
+    y_col = "error",
+    x_lab = "Number of SNPs",
+    y_lab = "Error (estimated - expected)",
+    title = "Estimation error under SNP subsampling",
+    subtitle = glue("n = {nb_reps} replicates per SNP count"),
+    show_x_labels = TRUE,
+    out_file = glue("{out_dir}/subsampling_freq_errors_boxplot.png")
+  )
 }
+
 
 #' Plot histogram of Minor Allele Frequencies (MAF) from a VCF object
 #'
@@ -1053,28 +1211,6 @@ plot_marker_set_intersections <- function(numeric_matrix, out_file = NULL) {
 }
 
 
-#' Compute estimation errors
-#'
-#' @param freqs_df Dataframe with at least an "ExpFreq" colomn (providing the expected frequencies) and an estimated frequencies column
-#' @param out_dir Path the the output directory to write output files (default = NULL)
-#' @param suffix Suffix to add in the output file names (default = "")
-#' @return An error dataframe
-#' @export
-compute_errors <- function(freqs_df, out_dir = NULL, suffix = "") {
-  est_freq_cols <- setdiff(colnames(freqs_df), c("Component", "Mixture", "Origin", "ExpFreq"))
-  errors_df<-freqs_df
-  for (condition in est_freq_cols) {
-    error_col <- glue("error_{condition}")
-    errors_df[[error_col]] <- errors_df[[condition]] - errors_df[["ExpFreq"]]
-  }
-  errors_df<-errors_df[,!(names(errors_df) %in% c("ExpFreq", est_freq_cols))]
-
-  if (! is.null(out_dir)) {
-    write.table(errors_df, glue("{out_dir}/errors{suffix}.tsv"), row.names = FALSE, quote = F, sep ="\t")
-  }
-  return(errors_df)
-}
-
 #' Merge multiple depth files by CHROM and POS
 #'
 #' @param depth_list Path to a text file listing depth file paths (one per line)
@@ -1108,45 +1244,34 @@ clean_depth_file <- function(depths){
   return(depths)
 }
 
+
 #' Plot boxplots of sequencing depth per marker
 #'
 #' @param depths Read depth data frame (SNPs x samples) with CHROM and POS as first two columns.
-#' @param hline Optional numeric value for a horizontal reference line (read depth value).
+#' @param hline Optional numeric value for a horizontal reference line (e.g. a depth threshold).
 #' @param out_file Optional path to save the plot as a PNG. If NULL, the plot is printed.
 #'
 #' @return A ggplot object (printed or saved).
 #' @export
 plot_depth_per_marker <- function(depths, hline = NULL, out_file = NULL) {
+  
   depths <- clean_depth_file(depths)
-  depths <- depths[names(sort(rowMeans(depths))), ]
-
-  df_long <- melt(as.matrix(depths))
+  depths <- depths[names(sort(rowMeans(depths))), , drop = FALSE]
+  
+  df_long <- reshape2::melt(as.matrix(depths))
   colnames(df_long) <- c("Marker", "Sample", "Depth")
-
-  p <- ggplot(df_long, aes(x = Marker, y = Depth, fill = "skyblue")) +
-    geom_boxplot(outlier.size = 0.5, color="grey30", fill="skyblue") +
-    theme_minimal(base_size = 16) +
-    theme(
-      axis.text.x = element_blank(),
-      axis.ticks.x = element_blank(),
-      panel.grid.major.x = element_blank(),
-      plot.title = element_text(hjust = 0.5)
-    ) +
-    labs(x = "Markers", y = "Depth", title = "Distribution of depth per marker")
-
-  if (!is.null(hline)) {
-    p <- p + geom_hline(yintercept = hline, linetype = "dashed", color = "orange") +
-      annotate("text", x = -Inf, y = hline, label = hline,
-               hjust = 1.45, vjust = +0.4, color="orange", cex=3.2) +
-      coord_cartesian(clip="off")
-  }
-
-  if (!is.null(out_file)) {
-    ggsave(out_file, p, width = 10, height = 8, dpi = 300, bg = "white")
-    writeLines(c("", "Output file saved in:", out_file, ""))
-  } else {
-    print(p)
-  }
+  
+  plot_boxplots(
+    df = df_long,
+    x_col = "Marker",
+    y_col = "Depth",
+    x_lab = "Markers",
+    y_lab = "Depth",
+    title = "Distribution of depth per marker",
+    hline = hline,
+    show_x_labels = FALSE,
+    out_file = out_file
+  )
 }
 
 

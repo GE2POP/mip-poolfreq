@@ -31,5 +31,6 @@ res <- frequency_accuracy_pipeline(
   lib_names_corresp_path = file.path(input_dir, "comp_libnames_corresp.tsv"),
   min_depth = 40,
   subsampling_step = 30,
+  subsampling_reps = 3,
   out_dir = out_dir
 )

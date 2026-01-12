@@ -29,6 +29,7 @@ option_list <- list(
   make_option(c("--exp_freqs_comp"), type = "character", default = NULL, help = "Path to expected genotype frequencies file of components"),
   make_option(c("--libs", "-l"), type = "character", default = NULL, help = "Path to library name correspondence file"),
   make_option(c("--subsampling_step", "-s"), type = "integer", default = 50, help = "Number of SNPs to skip between subsampling iterations [default = %default]"),
+  make_option(c("--subsampling_reps", "-r"), type = "integer", default = 5, help = "Number of random subsampling replicates per SNP subset size [default = %default]"),
   make_option(c("--out_dir", "-o"), type = "character", help = "Path to output directory")
 )
 
@@ -45,5 +46,6 @@ frequency_accuracy_pipeline(
   lib_names_corresp_path = opt$libs,
   min_depth = opt$min_depth,
   subsampling_step = opt$subsampling_step,
+  subsampling_reps = opt$subsampling_reps,
   out_dir = opt$out_dir
 )
