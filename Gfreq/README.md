@@ -27,8 +27,7 @@ Gfreq infers the contribution of each component to a set of mixtures using a VCF
 
 ```bash
 git clone git@github.com:GE2POP/mip-poolfreq.git
-cd mip-poolfreq/Gfreq
-R CMD INSTALL .
+R CMD INSTALL Gfreq
 ```
 
 ### Expose the command-line interface
@@ -68,6 +67,7 @@ Estimate genotype frequencies per SNP based on allele frequencies and depth info
 
 #### Example
 ```
+cd Gfreq
 Gfreq estimate_genotype_frequencies \
   -v example_data/input_files/comp_genotypes.vcf \
   -a example_data/input_files/mix_ref_all_freqs.tsv \
@@ -107,18 +107,18 @@ This script is intended for test datasets composed of **artificial mixtures with
 
 Three complementary analyses will be performed:
 
-1. **Direct comparison between expected and estimated frequencies**
-Estimated genotype frequencies in mixtures are compared to their expected values.
+1. **Direct comparison between expected and estimated frequencies**  
+Estimated genotype frequencies in mixtures are compared to their expected values.  
 In addition to estimating genotype frequencies in real mixtures, the same procedure can optionally be applied to the component libraries themselves, treated as if they were mixtures (thereafter referred to as “one-component mixtures”). To include them, the user must provide the components input files through the optional arguments --allele_freqs_comp, --depths_comp, and --exp_freqs_comp. This can serve as a control to verify that the estimation correctly returns a frequency of 1 for the corresponding component and 0 for the others.
 
-3. **Effect of weighting in the regression model**
-The regression model used to estimate genotype frequencies can include a weight vector to assign more importance to certain observations (i. e. allele frequencies) than others.
-In our implementation, SNP read depths are used as the weight vector when estimating genotype frequencies in a given mixture. This allows to give greater influence to SNPs with higher sequencing depth, as these are expected to provide more reliable allele frequency estimates.
-This analysis compares results obtained with and without read depth weighting.
+3. **Effect of weighting in the regression model**  
+The regression model used to estimate genotype frequencies can include a weight vector to assign more importance to certain observations (i. e. allele frequencies) than others.  
+In our implementation, SNP read depths are used as the weight vector when estimating genotype frequencies in a given mixture. This allows to give greater influence to SNPs with higher sequencing depth, as these are expected to provide more reliable allele frequency estimates.  
+This analysis compares results obtained with and without read depth weighting.  
 *One-component mixtures are not included in this analysis.*
 
-4. **Effect of reducing the number of SNPs used for estimation**
-To evaluate how decreasing the number of SNPs impacts estimation accuracy, SNPs are gradually subsampled, and genotype frequencies are estimated for each subset.
+4. **Effect of reducing the number of SNPs used for estimation**  
+To evaluate how decreasing the number of SNPs impacts estimation accuracy, SNPs are gradually subsampled, and genotype frequencies are estimated for each subset.  
 *One-component mixtures are not included in this analysis.*
 
 #### Arguments

@@ -14,6 +14,7 @@
 #' @param lib_names_corresp_path Optional path to library name correspondence file
 #' @param min_depth Minimum read depth threshold
 #' @param subsampling_step SNP subsampling step size
+#' @param subsampling_reps Integer. Number of random subsampling replicates per SNP subset size (default = 5).
 #' @param out_dir Output directory
 #'
 #' @return Invisibly returns a list with main output paths
@@ -29,6 +30,7 @@ frequency_accuracy_pipeline <- function(
     lib_names_corresp_path = NULL,
     min_depth = 0,
     subsampling_step = 50,
+    subsampling_reps = 5,
     out_dir
 ) {
     required_files <- list(
@@ -125,6 +127,7 @@ frequency_accuracy_pipeline <- function(
         snp_depths = inputs$snp_depths_mixtures,
         expected_freqs_melt = inputs$expected_freqs_mixtures_melt,
         step_size = subsampling_step,
+        nb_reps = subsampling_reps,
         out_dir = subsampling_subdir
     )
 

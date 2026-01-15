@@ -19,7 +19,7 @@ depth_list <- "dev/depth_files.list"
 ## ---- Run pipeline -----------------------------------------------------------
 
 res <- depth_per_marker_pipeline(
-  depth_files_list = depth_list,
+  depth_list = depth_list,
   hline = 50,
   out_dir = out_dir
 )
