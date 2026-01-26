@@ -118,7 +118,7 @@ This analysis compares results obtained with and without read depth weighting.
 *One-component mixtures are not included in this analysis.*
 
 4. **Effect of reducing the number of SNPs used for estimation**  
-To evaluate how decreasing the number of SNPs impacts estimation accuracy, SNPs are gradually subsampled, and genotype frequencies are estimated for each subset.  
+To evaluate how decreasing the number of SNPs impacts estimation accuracy, SNPs are gradually subsampled, genotype frequencies are estimated across multiple replicates, and estimation error distributions are visualized using boxplots.  
 *One-component mixtures are not included in this analysis.*
 
 #### Arguments
@@ -132,7 +132,8 @@ To evaluate how decreasing the number of SNPs impacts estimation accuracy, SNPs 
 --depths_comp                  Component depths per SNP TSV file (including columns CHROM, POS) *(optional)*
 --exp_freqs_comp               Component expected genotype frequencies TSV file *(optional)*
 -l, --libs                     Library name correspondence TSV file *(optional)*
--s, --subsampling_step         Number of SNPs added between subsampling iterations (default = 50)
+-s, --subsampling_step         Number of SNPs added between subsampling iterations *(default = 50)*
+-r, --subsampling_reps         Number of random subsampling replicates per SNP subset size *(default = 5)*
 -o, --out_dir                  Output directory
 ```
 
@@ -148,7 +149,8 @@ Gfreq evaluate_frequency_accuracy \
   --depths_comp example_data/input_files/comp_read_depths.tsv \
   --exp_freqs_comp example_data/input_files/comp_exp_geno_freqs.tsv \
   -l example_data/input_files/comp_libnames_corresp.tsv \
-  -s 30 \
+  -s 5 \
+  -r 3 \
   -o .
 ```
 
@@ -157,7 +159,6 @@ As [previously described](#snp-filtering-by-minimum-depth), SNPs whose minimum s
 Filtering is based exclusively on the mixture depth file (`--depths_mix`), but the same SNPs are also removed from the corresponding allele frequency and component tables to keep all inputs consistent before estimating genotype frequencies.
 
 #### Outputs
-<img width="460" height="493" alt="image" src="https://github.com/user-attachments/assets/b1502585-e0ba-4367-904b-575f90e5d9a3" />
 
 - **`expected_vs_estimated` folder:**
 *Comparison analysis of estimated vs expected genotype frequencies*
@@ -182,12 +183,9 @@ Filtering is based exclusively on the mixture depth file (`--depths_mix`), but t
 
 - **`snp_subsampling_effect` folder:**
 *Analysis of the effect of gradually reducing the number of SNPs through random subsampling on genotype frequency estimation*
-  - tables reporting mean and standard deviation of estimated frequencies (in mixtures) per expected value, computed for each random SNP subset
-  - tables of estimated biases (mean errors) per component and per expected frequency, with corresponding error boxplots, for each random SNP subset
-  - scatter plot of estimated vs expected genotype frequencies, for each random SNP subset
-  - `est_geno_freqs_boxplot_subsampling_effect.png`: boxplots of estimated values per expected frequency, for each random SNP subset
+  - `subsampling_freq_errors_boxplot.png`: boxplots of estimation errors (estimated minus expected genotype frequencies) across random SNP subsampling replicates, for increasing SNP subset sizes
 <p align="center">
-  <img width="677" height="507" alt="image" src="https://github.com/user-attachments/assets/6d89de73-2311-472d-86dc-147aab1c8adf" />
+
 </p>
 
 

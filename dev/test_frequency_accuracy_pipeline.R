@@ -30,7 +30,7 @@ res <- frequency_accuracy_pipeline(
   expected_freqs_components_path = file.path(input_dir, "comp_exp_geno_freqs.tsv"),
   lib_names_corresp_path = file.path(input_dir, "comp_libnames_corresp.tsv"),
   min_depth = 40,
-  subsampling_step = 30,
+  subsampling_step = 5,
   subsampling_reps = 3,
   out_dir = out_dir
 )

@@ -954,53 +954,6 @@ evaluate_weight_vector_effect<-function(genotyping_matrix, allele_freqs, snp_dep
 }
 
 
-#' Compare the effect of random SNP subsampling on genotype frequency estimation
-#'
-#' @param genotyping_matrix Genotyping matrix with values 1 (hom. REF), 0.5 (het), and 0 (hom. ALT) (SNPs x components)
-#' @param allele_freqs Allele frequency matrix (SNPs x mixtures)
-#' @param step_size Number of SNPs to increment by when subsampling
-#' @param snp_depths Read depths matrix (SNPs x mixtures) (default = NULL)
-#' @param expected_freqs_melt Melted dataframe of expected genotype frequencies
-#' @return Dataframe of estimated frequencies per condition
-#' @export
-estimate_geno_freqs_snps_subsampling <- function(genotyping_matrix, allele_freqs, step_size, snp_depths = NULL, expected_freqs_melt) {
-
-  common_snps <- intersect(rownames(genotyping_matrix), rownames(allele_freqs))
-  total_nb_snps <- length(common_snps)
-  nb_snps_to_sample <- unique(c(
-    seq(from = max(5, step_size), to = total_nb_snps, by = step_size),
-    total_nb_snps
-  ))
-
-  condition_levels <- paste0(nb_snps_to_sample, "_SNPs")
-
-  subsampled_genotype_freqs <- data.frame(Mixture = colnames(allele_freqs))
-
-  for (nb_snps in nb_snps_to_sample) {
-    condition <- glue("{nb_snps}_SNPs")
-    snps <- sample(common_snps, nb_snps)
-    if (! is.null(snp_depths)){
-      snp_depths_subset<-snp_depths[snps,]
-    } else {
-      snp_depths_subset<-NULL
-    }
-
-    genotype_freqs <- estimate_genotype_freqs(
-      genotyping_matrix = genotyping_matrix[snps,],
-      allele_freqs = allele_freqs[snps,],
-      snp_depths = snp_depths_subset,
-      expected_freqs_melt = expected_freqs_melt,
-      est_freq_col_name = condition
-      )
-
-    subsampled_genotype_freqs <- merge(subsampled_genotype_freqs, genotype_freqs)
-  }
-
-  attr(subsampled_genotype_freqs, "condition_levels") <- condition_levels
-
-  return(subsampled_genotype_freqs)
-}
-
 #' Estimate genotype frequency errors under SNP subsampling with replicates
 #' @param genotyping_matrix Genotyping matrix with values 1 (hom. REF), 0.5 (het), and 0 (hom. ALT) (SNPs x components)
 #' @param allele_freqs Allele frequency matrix (SNPs x mixtures)
@@ -1078,21 +1031,6 @@ estimate_freq_errors_subsampling <- function(genotyping_matrix, allele_freqs, st
 #' @export
 evaluate_subsampling_effect<-function(genotyping_matrix, allele_freqs, snp_depths, expected_freqs_melt, step_size, nb_reps=5, out_dir){
   writeLines("\n\nCompare the effect of random SNP subsampling on genotype frequency estimation:\n")
-
-  freqs_to_compare_subsampling<-estimate_geno_freqs_snps_subsampling(
-    genotyping_matrix = genotyping_matrix,
-    allele_freqs = allele_freqs,
-    snp_depths = snp_depths,
-    expected_freqs_melt = expected_freqs_melt,
-    step_size = step_size
-  )
-
-  compare_different_est_freqs(
-    freqs_to_compare = freqs_to_compare_subsampling,
-    variable_name = "Number of SNPs",
-    out_dir = out_dir,
-    suffix = "_subsampling_effect"
-  )
 
   errors<-estimate_freq_errors_subsampling(
     genotyping_matrix = genotyping_matrix,
