@@ -159,8 +159,9 @@ As [previously described](#snp-filtering-by-minimum-depth), SNPs whose minimum s
 Filtering is based exclusively on the mixture depth file (`--depths_mix`), but the same SNPs are also removed from the corresponding allele frequency and component tables to keep all inputs consistent before estimating genotype frequencies.
 
 #### Outputs
+<img width="447" height="412" alt="image" src="https://github.com/user-attachments/assets/e1c899af-1a7b-4614-a7d3-9e9e3fd70d88" />
 
-- **`expected_vs_estimated` folder:**
+- **`expected_vs_estimated` folder:**  
 *Comparison analysis of estimated vs expected genotype frequencies*
   - `est_geno_freqs_mixtures.tsv`: estimated genotype frequencies in mixtures
   - `est_geno_freqs_components.tsv`: estimated genotype frequencies in components
@@ -171,7 +172,7 @@ Filtering is based exclusively on the mixture depth file (`--depths_mix`), but t
   <img width="532" height="388" alt="image" src="https://github.com/user-attachments/assets/5073bff6-db9e-4e2f-ade4-144c40e3982a" />
 </p>
 
-- **`weight_vector_effect` folder:**
+- **`weight_vector_effect` folder:**  
 *Analysis of the effect of using read depth as a weight in the estimation model*
   - tables reporting mean and standard deviation of estimated frequencies (in mixtures) per expected value, computed with or without using read depth as weight
   - tables of estimated biases (mean errors) per component and per expected frequency, with corresponding error boxplots, with or without using read depth as weight
@@ -181,11 +182,11 @@ Filtering is based exclusively on the mixture depth file (`--depths_mix`), but t
   <img width="616" height="463" alt="image" src="https://github.com/user-attachments/assets/f7575565-95ef-49f9-ae8d-f430c699c440" />
 </p>
 
-- **`snp_subsampling_effect` folder:**
+- **`snp_subsampling_effect` folder:**  
 *Analysis of the effect of gradually reducing the number of SNPs through random subsampling on genotype frequency estimation*
   - `subsampling_freq_errors_boxplot.png`: boxplots of estimation errors (estimated minus expected genotype frequencies) across random SNP subsampling replicates, for increasing SNP subset sizes
 <p align="center">
-
+  <img width="697" height="500" alt="image" src="https://github.com/user-attachments/assets/d4b56a42-0680-4801-a3bf-a89bae104282" />
 </p>
 
 
