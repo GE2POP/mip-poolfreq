@@ -27,7 +27,7 @@ Gfreq infers the contribution of each component to a set of mixtures using a VCF
 
 ```bash
 git clone git@github.com:GE2POP/mip-poolfreq.git
-R CMD INSTALL Gfreq
+R CMD INSTALL mip-poolfreq/Gfreq
 ```
 
 ### Expose the command-line interface

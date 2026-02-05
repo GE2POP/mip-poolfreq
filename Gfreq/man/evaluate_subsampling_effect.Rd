@@ -10,6 +10,7 @@ evaluate_subsampling_effect(
   snp_depths,
   expected_freqs_melt,
   step_size,
+  nb_reps = 5,
   out_dir
 )
 }
@@ -23,6 +24,8 @@ evaluate_subsampling_effect(
 \item{expected_freqs_melt}{Melted dataframe of expected genotype frequencies}
 
 \item{step_size}{Number of SNPs to increment by when subsampling}
+
+\item{nb_reps}{Integer. Number of random subsampling replicates per SNP subset size (default = 5).}
 
 \item{out_dir}{Path to the output directory to save plots and result files}
 }

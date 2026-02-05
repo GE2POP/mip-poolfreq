@@ -9,7 +9,7 @@ plot_depth_per_marker(depths, hline = NULL, out_file = NULL)
 \arguments{
 \item{depths}{Read depth data frame (SNPs x samples) with CHROM and POS as first two columns.}
 
-\item{hline}{Optional numeric value for a horizontal reference line (read depth value).}
+\item{hline}{Optional numeric value for a horizontal reference line (e.g. a depth threshold).}
 
 \item{out_file}{Optional path to save the plot as a PNG. If NULL, the plot is printed.}
 }
