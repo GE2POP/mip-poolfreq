@@ -169,7 +169,7 @@ Filtering is based exclusively on the mixture depth file (`--depths_mix`), but t
   - tables of estimated biases (mean errors) per component and per expected frequency, with corresponding error boxplots
   - scatter plot of estimated vs expected genotype frequencies; each dot represents the frequency of one component in a mixture. If --allele_freqs_comp, --depths_comp and --exp_freqs_comp were provided, frequencies estimated in one-component mixtures (i.e. component libraries treated as mixtures for validation) are shown in grey and are excluded from the regression fitting.
 <p align="center">
-  <img width="532" height="388" alt="image" src="https://github.com/user-attachments/assets/5073bff6-db9e-4e2f-ade4-144c40e3982a" />
+  <img width="602" height="415" alt="image" src="https://github.com/user-attachments/assets/e79ee3aa-8b27-49ae-8ff6-999d6eaecbf2" />
 </p>
 
 - **`weight_vector_effect` folder:**  
@@ -240,7 +240,7 @@ Gfreq plot_depth_per_marker \
 - `mean_depth_per_marker.tsv`: mean read depth per SNP across samples.
 - `depth_per_marker_boxplots.png`: boxplot of depth distributions, with optional horizontal reference line.
 <p align="center">
-  <img width="871" height="482" alt="image" src="https://github.com/user-attachments/assets/7c331c4b-c744-4a04-b347-ffb7961872f1" />
+  <img width="1160" height="848" alt="image" src="https://github.com/user-attachments/assets/50e40773-e58c-48ba-9a70-83c4396811f3" />
 </p>
 
 ---
