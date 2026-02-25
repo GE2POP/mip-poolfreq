@@ -64,3 +64,59 @@ Gfreq depth \
   -d dev/depth_files.list \
   -l 50 \
   -o dev/outputs/depth
+
+# test Docker image
+version=0.1.0
+docker build -t gfreq:${version} .
+docker run --rm gfreq:${version} --help
+
+input_dir="Gfreq/example_data/input_files"
+
+mkdir -p dev/outputs/estimate
+docker run --rm \
+  -v "$(pwd)/${input_dir}:/in:ro" \
+  -v "$(pwd)/dev/outputs/estimate:/out" \
+  gfreq:${version} estimate \
+  -v /in/comp_genotypes.vcf \
+  -a /in/mix_ref_all_freqs.tsv \
+  -d /in/mix_read_depths.tsv \
+  -t 40 \
+  -l /in/comp_libnames_corresp.tsv \
+  -o /out/genotype_frequencies.tsv
+
+mkdir -p dev/outputs/eval
+docker run --rm \
+  -v "$(pwd)/${input_dir}:/in:ro" \
+  -v "$(pwd)/dev/outputs/eval:/out" \
+  gfreq:${version} eval \
+  -v /in/comp_genotypes.vcf \
+  --allele_freqs_mix /in/mix_ref_all_freqs.tsv \
+  --depths_mix /in/mix_read_depths.tsv \
+  --exp_freqs_mix /in/mix_exp_geno_freqs.tsv \
+  -t 40 \
+  --allele_freqs_comp /in/comp_ref_all_freqs.tsv \
+  --depths_comp /in/comp_read_depths.tsv \
+  --exp_freqs_comp /in/comp_exp_geno_freqs.tsv \
+  -l /in/comp_libnames_corresp.tsv \
+  -s 5 \
+  -r 20 \
+  --sampling_seed 123 \
+  -o /out
+
+mkdir -p dev/outputs/maf
+docker run --rm \
+  -v "$(pwd)/${input_dir}:/in:ro" \
+  -v "$(pwd)/dev/outputs/maf:/out" \
+  gfreq:${version} maf \
+  -v /in/comp_genotypes.vcf \
+  -l /in/comp_libnames_corresp.tsv \
+  -o /out
+
+mkdir -p dev/outputs/depth
+docker run --rm \
+  -v "$(pwd)/dev:/in:ro" \
+  -v "$(pwd)/dev/outputs/depth:/out" \
+  gfreq:${version} depth \
+  -d /in/depth_files.list \
+  -l 50 \
+  -o /out
