@@ -118,7 +118,7 @@ This analysis compares results obtained with and without read depth weighting.
 *One-component mixtures are not included in this analysis.*
 
 3. **Effect of reducing the number of SNPs used for estimation**  
-To evaluate how decreasing the number of SNPs impacts estimation accuracy, SNPs are gradually subsampled, genotype frequencies are estimated across multiple replicates, and estimation error distributions are visualized using boxplots. SNP subsets are randomly drawn using R’s sample() function. Results therefore depend on random draws unless a seed is specified via --seed.  
+To evaluate how decreasing the number of SNPs impacts estimation accuracy, SNPs are gradually subsampled, genotype frequencies are estimated across multiple replicates, and estimation error distributions are visualized using boxplots. SNP subsets are randomly drawn using R’s sample() function. Results therefore depend on random draws unless a seed is specified via --sampling_seed.  
 *One-component mixtures are not included in this analysis.*
 
 #### Arguments
@@ -134,7 +134,7 @@ To evaluate how decreasing the number of SNPs impacts estimation accuracy, SNPs 
 -l, --libs                     Library name correspondence TSV file *(optional)*
 -s, --sampling_step         Number of SNPs added between subsampling iterations *(default = 50)*
 -r, --sampling_reps         Number of random subsampling replicates per SNP subset size *(default = 5)*
---subsampling_seed             Integer. Optional random seed to ensure reproducibility of SNP subsampling replicates (default: not set).
+--sampling_seed             Integer. Optional random seed to ensure reproducibility of SNP subsampling replicates (default: not set).
 -o, --out_dir                  Output directory
 ```
 
