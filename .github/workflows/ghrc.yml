@@ -33,7 +33,7 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}:${{ github.ref_name }}
-            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/ge2pop/mip-poolfreq:${{ github.ref_name }}
+            ghcr.io/ge2pop/mip-poolfreq:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
