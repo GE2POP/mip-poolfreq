@@ -166,7 +166,7 @@ Filtering is based exclusively on the mixture depth file (`--depths_mix`), but t
   - `est_geno_freqs_mixtures.tsv`: estimated genotype frequencies in mixtures
   - `est_geno_freqs_components.tsv`: estimated genotype frequencies in components
   - tables reporting mean and standard deviation of estimated frequencies (in mixtures) per expected value
-  - tables of estimated biases (mean errors) per component and per expected frequency, with corresponding error boxplots
+  - tables of estimated biases (mean errors) per component and per expected frequency, with corresponding error boxplots. Differences among components are assessed using one-way ANOVA followed by Tukey’s HSD post-hoc test; significance groups (letters) are reported in the `bias_per_component` table.
   - scatter plot of estimated vs expected genotype frequencies; each dot represents the frequency of one component in a mixture. If --allele_freqs_comp, --depths_comp and --exp_freqs_comp were provided, frequencies estimated in one-component mixtures (i.e. component libraries treated as mixtures for validation) are shown in grey and are excluded from the regression fitting.
 <p align="center">
   <img width="602" height="415" alt="image" src="https://github.com/user-attachments/assets/e79ee3aa-8b27-49ae-8ff6-999d6eaecbf2" />
@@ -175,7 +175,7 @@ Filtering is based exclusively on the mixture depth file (`--depths_mix`), but t
 - **`weight_vector_effect` folder:**  
 *Analysis of the effect of using read depth as a weight in the estimation model*
   - tables reporting mean and standard deviation of estimated frequencies (in mixtures) per expected value, computed with or without using read depth as weight
-  - tables of estimated biases (mean errors) per component and per expected frequency, with corresponding error boxplots, with or without using read depth as weight
+  - tables of estimated biases (mean errors) per component and per expected frequency, with corresponding error boxplots, with or without using read depth as weight. Differences among components are assessed separately for each weighting strategy (none vs read depth) using one-way ANOVA followed by Tukey’s HSD post-hoc test; significance groups (letters) are reported in the corresponding `bias_per_component` table.
   - scatter plot of estimated vs expected genotype frequencies, with or without using read depth as weight
   - `est_geno_freqs_boxplot_weight_effect.png`: boxplots of estimated values per expected frequency, with or without using read depth as weight
 <p align="center">
