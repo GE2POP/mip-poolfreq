@@ -3,6 +3,16 @@
 
 cd "mip-poolfreq"
 
+# test build
+(
+  cd Gfreq
+  rm -f Gfreq_*.tar.gz
+  Rscript -e "devtools::document()"
+  R CMD build .
+  R CMD check --no-manual Gfreq_*.tar.gz
+  rm Gfreq_*.tar.gz
+)
+
 # test pipelines
 Rscript dev/test_estimate_pipeline.R
 Rscript dev/test_eval_pipeline.R
@@ -40,6 +50,7 @@ Gfreq eval \
   -l ${input_dir}/comp_libnames_corresp.tsv \
   -s 5 \
   -r 20 \
+  --sampling_seed 123 \
   -o dev/outputs/eval
 
 mkdir -p dev/outputs/maf
@@ -53,12 +64,3 @@ Gfreq depth \
   -d dev/depth_files.list \
   -l 50 \
   -o dev/outputs/depth
-
-(
-  cd Gfreq
-  rm -f Gfreq_*.tar.gz
-  Rscript -e "devtools::document()"
-  R CMD build .
-  R CMD check --no-manual Gfreq_*.tar.gz
-  rm Gfreq_*.tar.gz
-)

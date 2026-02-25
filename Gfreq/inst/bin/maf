@@ -22,7 +22,7 @@ option_list <- list(
 
 opt <- parse_args(OptionParser(option_list = option_list))
 
-MAF_hist_pipeline(
+maf_pipeline(
   genotyping_vcf_path = opt$vcf,
   lib_names_corresp_path = opt$libs,
   out_dir = opt$out_dir

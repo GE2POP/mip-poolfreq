@@ -1023,6 +1023,7 @@ estimate_freq_errors_subsampling <- function(genotyping_matrix, allele_freqs, st
 #' @param step_size Number of SNPs to increment by when subsampling
 #' @param nb_reps Integer. Number of random subsampling replicates per SNP subset size (default = 5).
 #' @param out_dir Path to the output directory to save plots and result files
+#' @param seed Integer. Optional random seed used to ensure reproducibility of SNP subsampling replicates. If NULL (default), results are stochastic.
 #'
 #' @return A named list with two elements:
 #' \describe{
@@ -1030,8 +1031,13 @@ estimate_freq_errors_subsampling <- function(genotyping_matrix, allele_freqs, st
 #'   \item{bias}{A list of dataframes from \code{compute_bias()}: bias per component and per expected frequency}
 #' }
 #' @export
-evaluate_subsampling_effect<-function(genotyping_matrix, allele_freqs, snp_depths, expected_freqs_melt, step_size, nb_reps=5, out_dir){
+evaluate_subsampling_effect<-function(genotyping_matrix, allele_freqs, snp_depths, expected_freqs_melt, step_size, nb_reps=5, out_dir, seed=NULL){
   writeLines("\n\nCompare the effect of random SNP subsampling on genotype frequency estimation:\n")
+  
+  if (!is.null(seed)) {
+    set.seed(seed)
+    message(sprintf("Random seed set to %d.", seed))
+  }
 
   errors<-estimate_freq_errors_subsampling(
     genotyping_matrix = genotyping_matrix,

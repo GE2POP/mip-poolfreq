@@ -1,4 +1,4 @@
-#' Run the full frequency accuracy evaluation pipeline
+#' Frequency accuracy evaluation pipeline
 #'
 #' This function orchestrates the complete workflow to estimate genotype
 #' frequencies, compare them to expected frequencies, compute biases,
@@ -15,6 +15,7 @@
 #' @param min_depth Minimum read depth threshold
 #' @param subsampling_step SNP subsampling step size
 #' @param subsampling_reps Integer. Number of random subsampling replicates per SNP subset size (default = 5).
+#' @param subsampling_seed Integer. Optional random seed controlling all stochastic procedures within the evaluation pipeline (e.g. SNP subsampling). If NULL (default), no seed is set and results may vary between runs.
 #' @param out_dir Output directory
 #'
 #' @return Invisibly returns a list with main output paths
@@ -31,6 +32,7 @@ eval_pipeline <- function(
     min_depth = 0,
     subsampling_step = 50,
     subsampling_reps = 5,
+    subsampling_seed = NULL,
     out_dir
 ) {
     required_files <- list(
@@ -128,6 +130,7 @@ eval_pipeline <- function(
         expected_freqs_melt = inputs$expected_freqs_mixtures_melt,
         step_size = subsampling_step,
         nb_reps = subsampling_reps,
+        seed = subsampling_seed,
         out_dir = subsampling_subdir
     )
 

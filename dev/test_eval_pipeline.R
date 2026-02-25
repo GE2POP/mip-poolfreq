@@ -32,5 +32,6 @@ res <- eval_pipeline(
   min_depth = 40,
   subsampling_step = 5,
   subsampling_reps = 3,
+  subsampling_seed = 123,
   out_dir = out_dir
 )

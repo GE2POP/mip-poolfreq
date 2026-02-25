@@ -1,7 +1,7 @@
 #' Depth per marker analysis pipeline
 #'
-#' Run the complete pipeline to merge SNP depth files, compute mean depth per
-#' marker and generate depth distribution plots.
+#' This function merges SNP depth files, computes mean depth per
+#' marker and generates depth distribution plots.
 #'
 #' @param depth_list Path to a file listing depth files
 #' @param hline Optional numeric value for a horizontal reference line

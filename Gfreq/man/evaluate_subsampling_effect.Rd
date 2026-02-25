@@ -11,7 +11,8 @@ evaluate_subsampling_effect(
   expected_freqs_melt,
   step_size,
   nb_reps = 5,
-  out_dir
+  out_dir,
+  seed = NULL
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ evaluate_subsampling_effect(
 \item{nb_reps}{Integer. Number of random subsampling replicates per SNP subset size (default = 5).}
 
 \item{out_dir}{Path to the output directory to save plots and result files}
+
+\item{seed}{Integer. Optional random seed used to ensure reproducibility of SNP subsampling replicates. If NULL (default), results are stochastic.}
 }
 \value{
 A named list with two elements:

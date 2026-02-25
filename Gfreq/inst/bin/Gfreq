@@ -3,10 +3,10 @@
 args <- commandArgs(trailingOnly = TRUE)
 
 available_cmds <- c(
-  "estimate_genotype_frequencies",
-  "evaluate_frequency_accuracy",
-  "plot_MAF_hist",
-  "plot_depth_per_marker"
+  "estimate",
+  "eval",
+  "maf",
+  "depth"
 )
 
 print_help <- function() {

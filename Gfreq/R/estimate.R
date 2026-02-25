@@ -1,6 +1,6 @@
 #' Estimate genotype frequencies pipeline
 #'
-#' Run the complete pipeline to estimate genotype frequencies from a genotyping
+#' This function estimates genotype frequencies from a genotyping
 #' VCF, allele frequencies and SNP depths.
 #'
 #' @param genotyping_vcf_path Path to genotyping VCF

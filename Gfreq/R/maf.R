@@ -1,6 +1,6 @@
 #' Minor allele frequency analysis pipeline
 #'
-#' Run the complete pipeline to compute and plot minor allele frequency (MAF)
+#' This function computes and plots minor allele frequency (MAF)
 #' distributions and marker set intersections from a genotyping VCF.
 #'
 #' @param genotyping_vcf_path Path to genotyping VCF
