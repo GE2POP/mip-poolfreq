@@ -12,7 +12,7 @@
 #'
 #' @return Invisibly returns the output file path
 #' @export
-estimate_genotype_frequencies_pipeline <- function(
+estimate_pipeline <- function(
   genotyping_vcf_path,
   allele_freqs_path,
   snp_depths_path,

@@ -1,12 +1,13 @@
 #!/bin/bash
+# Note: works in WSL
 
 cd "mip-poolfreq"
 
 # test pipelines
-Rscript dev/test_estimate_genotype_frequencies_pipeline.R
-Rscript dev/test_frequency_accuracy_pipeline.R
-Rscript dev/test_depth_per_marker_pipeline.R
-Rscript dev/test_MAF_hist_pipeline.R
+Rscript dev/test_estimate_pipeline.R
+Rscript dev/test_eval_pipeline.R
+Rscript dev/test_depth_pipeline.R
+Rscript dev/test_maf_pipeline.R
 
 
 # test CLI
@@ -17,17 +18,17 @@ Rscript dev/test_MAF_hist_pipeline.R
 
 input_dir="Gfreq/example_data/input_files"
 
-mkdir -p dev/outputs/estimate_genotype_frequencies
-Gfreq estimate_genotype_frequencies \
+mkdir -p dev/outputs/estimate
+Gfreq estimate \
   -v ${input_dir}/comp_genotypes.vcf \
   -a ${input_dir}/mix_ref_all_freqs.tsv \
   -d ${input_dir}/mix_read_depths.tsv \
   -t 40 \
   -l ${input_dir}/comp_libnames_corresp.tsv \
-  -o dev/outputs/estimate_genotype_frequencies/genotype_frequencies.tsv
+  -o dev/outputs/estimate/genotype_frequencies.tsv
 
-mkdir -p dev/outputs/frequency_accuracy
-Gfreq evaluate_frequency_accuracy \
+mkdir -p dev/outputs/eval
+Gfreq eval \
   -v ${input_dir}/comp_genotypes.vcf \
   --allele_freqs_mix ${input_dir}/mix_ref_all_freqs.tsv \
   --depths_mix ${input_dir}/mix_read_depths.tsv \
@@ -39,16 +40,25 @@ Gfreq evaluate_frequency_accuracy \
   -l ${input_dir}/comp_libnames_corresp.tsv \
   -s 5 \
   -r 20 \
-  -o dev/outputs/frequency_accuracy
+  -o dev/outputs/eval
 
-mkdir -p dev/outputs/MAF_hist
-Gfreq plot_MAF_hist \
+mkdir -p dev/outputs/maf
+Gfreq maf \
   -v ${input_dir}/comp_genotypes.vcf \
   -l ${input_dir}/comp_libnames_corresp.tsv \
-  -o dev/outputs/MAF_hist
+  -o dev/outputs/maf
 
-mkdir -p dev/outputs/depth_per_marker
-Gfreq plot_depth_per_marker \
+mkdir -p dev/outputs/depth
+Gfreq depth \
   -d dev/depth_files.list \
   -l 50 \
-  -o dev/outputs/depth_per_marker
+  -o dev/outputs/depth
+
+(
+  cd Gfreq
+  rm -f Gfreq_*.tar.gz
+  Rscript -e "devtools::document()"
+  R CMD build .
+  R CMD check --no-manual Gfreq_*.tar.gz
+  rm Gfreq_*.tar.gz
+)

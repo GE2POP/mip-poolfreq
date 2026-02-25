@@ -9,6 +9,8 @@ plot_error_boxplots(errors_long_df, variable_name, out_dir = NULL, suffix = "")
 \arguments{
 \item{errors_long_df}{Long-format dataframe with columns: Component, ExpFreq, Error, Condition}
 
+\item{variable_name}{Label to use for the x-axis (i.e., the condition name shown on plots).}
+
 \item{out_dir}{Optional output directory to save plots (default = NULL)}
 
 \item{suffix}{Optional suffix to append to output file names (default = "")}

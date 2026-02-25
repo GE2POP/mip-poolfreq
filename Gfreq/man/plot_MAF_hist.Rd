@@ -10,6 +10,8 @@ plot_MAF_hist(vcf, x_lim_values, out_dir = NULL)
 \item{vcf}{A `vcfR` object, as read by [vcfR::read.vcfR()].}
 
 \item{x_lim_values}{A numeric vector of length 2 indicating the minimum and maximum x-axis limits (e.g., `c(0, 0.5)`).}
+
+\item{out_dir}{Path the the output directory to write output files (default = NULL)}
 }
 \value{
 A histogram plot of the MAF distribution. No return value; the function is used for its side effect (plot).

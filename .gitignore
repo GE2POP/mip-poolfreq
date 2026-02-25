@@ -1,6 +1,25 @@
-Gfreq/.RData
-Gfreq/.Rhistory
-Gfreq/R/.Rhistory
-Gfreq/scripts/.Rhistory
-dev/outputs
+# R session files
+.Rhistory
+.RData
+.Rproj.user
+.Ruserdata
+*.Rproj
+
+# R CMD build and check
+Gfreq_*.tar.gz
+*.Rcheck/
+..Rcheck/
+
+# Temp files
+*.log
+*.aux
+*.out
+*.toc
+
+# OS / editor
+.DS_Store
 .vscode/
+.idea/
+
+# Dev folders
+dev/outputs

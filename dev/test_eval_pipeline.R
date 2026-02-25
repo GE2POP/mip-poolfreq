@@ -14,13 +14,13 @@ library(zeallot)
 ## ---- Paths -----------------------------------------------------------------
 
 input_dir <- "Gfreq/example_data/input_files"
-out_dir <- "dev/outputs/frequency_accuracy"
+out_dir <- "dev/outputs/eval"
 
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
 ## ---- Run pipeline -----------------------------------------------------------
 
-res <- frequency_accuracy_pipeline(
+res <- eval_pipeline(
   genotyping_vcf_path = file.path(input_dir, "comp_genotypes.vcf"),
   allele_freqs_mixtures_path = file.path(input_dir, "mix_ref_all_freqs.tsv"),
   snp_depths_mixtures_path = file.path(input_dir, "mix_read_depths.tsv"),

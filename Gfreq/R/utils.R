@@ -193,7 +193,7 @@ filter_lowdepth_snps<-function(depths, extra_files, min_depth){
   })
 
   if (n_filtered == 0) {
-    writeLines(sprintf("No SNPs filtered (all depths ≥ %d).", min_depth))
+    writeLines(sprintf("No SNPs filtered (all depths >= %d).", min_depth))
   } else {
     writeLines(sprintf("\n\nINFO: Filtered %d SNPs with min depth < %d.", n_filtered, min_depth))
   }
@@ -766,6 +766,7 @@ compute_bias_from_errors <- function(freqs_df, error_col, condition) {
 #' Plot grouped error boxplots by component and expected frequency
 #'
 #' @param errors_long_df Long-format dataframe with columns: Component, ExpFreq, Error, Condition
+#' @param variable_name Label to use for the x-axis (i.e., the condition name shown on plots).
 #' @param out_dir Optional output directory to save plots (default = NULL)
 #' @param suffix Optional suffix to append to output file names (default = "")
 #'
@@ -1062,6 +1063,7 @@ evaluate_subsampling_effect<-function(genotyping_matrix, allele_freqs, snp_depth
 #'
 #' @param vcf A `vcfR` object, as read by [vcfR::read.vcfR()].
 #' @param x_lim_values A numeric vector of length 2 indicating the minimum and maximum x-axis limits (e.g., `c(0, 0.5)`).
+#' @param out_dir Path the the output directory to write output files (default = NULL)
 #'
 #' @return A histogram plot of the MAF distribution. No return value; the function is used for its side effect (plot).
 #' @export
@@ -1107,7 +1109,7 @@ plot_MAF_hist<-function(vcf, x_lim_values, out_dir = NULL){
 
 #' Plot marker set intersections as an UpSet and save to PNG.
 #'
-#' @param vcf A numeric genotyping matrix (rows = SNPs, columns = samples) where 1 = homozygous for the major allele, 0 = homozygous for the minor allele. Typically produced by [vcf_to_majmin_numeric_matrix()].
+#' @param numeric_matrix A numeric genotyping matrix (rows = SNPs, columns = samples) where 1 = homozygous for the major allele, 0 = homozygous for the minor allele. Typically produced by [vcf_to_majmin_numeric_matrix()].
 #' @param out_file Output PNG file path.
 #' @return An UpSet plot of the marker set intersections. No return value; the function is used for its side effect (plot).
 #' @export

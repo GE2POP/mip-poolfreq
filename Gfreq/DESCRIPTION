@@ -5,16 +5,21 @@ Encoding: UTF-8
 Description: Tools to estimate genotype frequencies from a genotyping matrix (VCF) and allele frequencies in variety mixtures.
 Author: Johanna Girodolle
 Maintainer: Johanna Girodolle <johanna.girodolle@outlook.com>
-License: MIT
+License: MIT + file LICENSE
 Imports:
     ggplot2,
     glue,
+    magrittr,
     multcompView,
-    optparse,
     reshape2,
+    rlang,
     scales,
-    this.path,
+    tidyr,
+    tidyselect,
     UpSetR,
     vcfR,
     zeallot
+Suggests:
+    optparse,
+    this.path
 RoxygenNote: 7.3.3

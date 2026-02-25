@@ -9,7 +9,7 @@
 #'
 #' @return Invisibly returns the output file path
 #' @export
-MAF_hist_pipeline <- function(
+maf_pipeline <- function(
   genotyping_vcf_path,
   lib_names_corresp_path = NULL,
   out_dir

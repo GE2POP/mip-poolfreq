@@ -19,7 +19,7 @@
 #'
 #' @return Invisibly returns a list with main output paths
 #' @export
-frequency_accuracy_pipeline <- function(
+eval_pipeline <- function(
     genotyping_vcf_path,
     allele_freqs_mixtures_path,
     snp_depths_mixtures_path,

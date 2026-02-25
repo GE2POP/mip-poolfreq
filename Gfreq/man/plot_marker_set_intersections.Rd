@@ -7,9 +7,9 @@
 plot_marker_set_intersections(numeric_matrix, out_file = NULL)
 }
 \arguments{
-\item{out_file}{Output PNG file path.}
+\item{numeric_matrix}{A numeric genotyping matrix (rows = SNPs, columns = samples) where 1 = homozygous for the major allele, 0 = homozygous for the minor allele. Typically produced by [vcf_to_majmin_numeric_matrix()].}
 
-\item{vcf}{A numeric genotyping matrix (rows = SNPs, columns = samples) where 1 = homozygous for the major allele, 0 = homozygous for the minor allele. Typically produced by [vcf_to_majmin_numeric_matrix()].}
+\item{out_file}{Output PNG file path.}
 }
 \value{
 An UpSet plot of the marker set intersections. No return value; the function is used for its side effect (plot).

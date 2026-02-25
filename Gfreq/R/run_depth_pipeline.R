@@ -9,7 +9,7 @@
 #'
 #' @return Invisibly returns a list of output file paths
 #' @export
-depth_per_marker_pipeline <- function(
+depth_pipeline <- function(
   depth_list,
   hline = NULL,
   out_dir

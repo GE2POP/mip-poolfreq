@@ -9,10 +9,10 @@ Gfreq infers the contribution of each component to a set of mixtures using a VCF
 ## Table of Contents
 - [Installation](#installation)
 - [Command-line usage](#command-line-usage)
-  - [1. estimate_genotype_frequencies](#1-estimate_genotype_frequencies)
-  - [2. evaluate_frequency_accuracy](#2-evaluate_frequency_accuracy)
-  - [3. plot_MAF_hist](#3-plot_maf_hist)
-  - [4. plot_depth_per_marker](#4-plot_depth_per_marker)
+  - [1. estimate](#1-estimate)
+  - [2. eval](#2-eval)
+  - [3. maf](#3-maf)
+  - [4. depth](#4-depth)
 - [Input files](#input-files)
 
 ---
@@ -51,9 +51,9 @@ Gfreq --help
 
 *Example input and output files are provided in the example_data/ directory to illustrate the expected formats and typical results.*
 
-### 1. `estimate_genotype_frequencies`
+### 1. `estimate`
 
-Estimate genotype frequencies per SNP based on allele frequencies and depth information.
+Estimate genotype frequencies in each mixture from SNP allele frequencies and read depths.
 
 #### Arguments
 ```
@@ -68,7 +68,7 @@ Estimate genotype frequencies per SNP based on allele frequencies and depth info
 #### Example
 ```
 cd Gfreq
-Gfreq estimate_genotype_frequencies \
+Gfreq estimate \
   -v example_data/input_files/comp_genotypes.vcf \
   -a example_data/input_files/mix_ref_all_freqs.tsv \
   -d example_data/input_files/mix_read_depths.tsv \
@@ -99,7 +99,7 @@ EL4X_482	Tm1313	0.348394182207116
 ```
 
 
-### 2. `evaluate_frequency_accuracy`
+### 2. `eval`
 
 *Compare estimated genotype frequencies to expected values and compute bias, variance, and correlation metrics.*
 
@@ -111,13 +111,13 @@ Three complementary analyses will be performed:
 Estimated genotype frequencies in mixtures are compared to their expected values.  
 In addition to estimating genotype frequencies in real mixtures, the same procedure can optionally be applied to the component libraries themselves, treated as if they were mixtures (thereafter referred to as “one-component mixtures”). To include them, the user must provide the components input files through the optional arguments --allele_freqs_comp, --depths_comp, and --exp_freqs_comp. This can serve as a control to verify that the estimation correctly returns a frequency of 1 for the corresponding component and 0 for the others.
 
-3. **Effect of weighting in the regression model**  
+2. **Effect of weighting in the regression model**  
 The regression model used to estimate genotype frequencies can include a weight vector to assign more importance to certain observations (i. e. allele frequencies) than others.  
 In our implementation, SNP read depths are used as the weight vector when estimating genotype frequencies in a given mixture. This allows to give greater influence to SNPs with higher sequencing depth, as these are expected to provide more reliable allele frequency estimates.  
 This analysis compares results obtained with and without read depth weighting.  
 *One-component mixtures are not included in this analysis.*
 
-4. **Effect of reducing the number of SNPs used for estimation**  
+3. **Effect of reducing the number of SNPs used for estimation**  
 To evaluate how decreasing the number of SNPs impacts estimation accuracy, SNPs are gradually subsampled, genotype frequencies are estimated across multiple replicates, and estimation error distributions are visualized using boxplots.  
 *One-component mixtures are not included in this analysis.*
 
@@ -139,7 +139,7 @@ To evaluate how decreasing the number of SNPs impacts estimation accuracy, SNPs 
 
 #### Example
 ```
-Gfreq evaluate_frequency_accuracy \
+Gfreq eval \
   -v example_data/input_files/comp_genotypes.vcf \
   --allele_freqs_mix example_data/input_files/mix_ref_all_freqs.tsv \
   --depths_mix example_data/input_files/mix_read_depths.tsv \
@@ -190,7 +190,7 @@ Filtering is based exclusively on the mixture depth file (`--depths_mix`), but t
 </p>
 
 
-### 3. `plot_MAF_hist`
+### 3. `maf`
 Compute Minor Allele Frequency (MAF) values from a VCF file and plot their distribution.
 
 #### Arguments
@@ -202,7 +202,7 @@ Compute Minor Allele Frequency (MAF) values from a VCF file and plot their distr
 
 #### Example
 ```
-Gfreq plot_MAF_hist \
+Gfreq maf \
   -v example_data/input_files/comp_genotypes.vcf \
   -l example_data/input_files/comp_libnames_corresp.tsv \
   -o .
@@ -218,19 +218,20 @@ Gfreq plot_MAF_hist \
 
 
 
-### 4. `plot_depth_per_marker`
+### 4. `depth`
 Plot read depth distribution (boxplots) per SNP.
 
 #### Arguments
 ```
--d, --depth_files_list   Text file listing all depth TSV files
+-d, --depth_files_list   Text file listing all depth TSV files (one file path per line, no header).
+                         Both relative and absolute paths are accepted.
 -l, --hline              Read depth reference value to show as a horizontal line on the plot *(optional)*
 -o, --out_dir            Output directory
 ```
 
 #### Example
 ```
-Gfreq plot_depth_per_marker \
+Gfreq depth \
   -d example_data/input_files/depth_files.list \
   -l 50 \
   -o .
@@ -253,7 +254,7 @@ Standard multi-sample **VCF** (biallelic SNPs only) providing the genotypes of t
 Sample names correspond to libraries listed in the `--libs` file (if provided)
 
 
-### • Allele frequency file (`--allele_freqs`)
+### • Allele frequency file (`--allele_freqs`, `--allele_freqs_mix`, `--allele_freqs_comp`)
 
 TSV file giving the **reference allele frequencies at each SNP in the mixtures**.
 Used to estimate genotype frequencies from observed allele proportions.
@@ -267,7 +268,7 @@ Used to estimate genotype frequencies from observed allele proportions.
 | One column per mixture | Allele frequency of the REF allele at this SNP in each mixture |
 
 
-### • Read depth file (`--depths`)
+### • Read depth file (`--depths`, `--depths_mix`, `--depths_comp`)
 
 TSV file giving the **sequencing depth per SNP in the mixtures**.
 Used to weight allele frequencies during genotype frequency estimation.
@@ -280,7 +281,7 @@ Used to weight allele frequencies during genotype frequency estimation.
 | `POS` | SNP position |
 | One column per mixture | Read depth at this SNP in each mixture |
 
-### • Expected genotype frequency file (`--exp_freqs`)
+### • Expected genotype frequency file (`--exp_freqs_mix`, `--exp_freqs_comp`)
 
 TSV file giving the **expected genotype proportions of each component within each mixture**.
 Each row corresponds to one mixture, and the values represent the expected fraction (0–1) of each component genotype contributing to it.
