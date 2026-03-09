@@ -1,0 +1,7 @@
+##fileformat=VCFv4.2
+##contig=<ID=chr1>
+##FORMAT=<ID=AD,Number=R,Type=Integer,Description="Allelic depths">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	S1	S2	S3
+chr1	100	.	A	G	.	PASS	.	AD	8,2	1,9	0,0
+chr1	200	.	C	T,G	.	PASS	.	AD	5,3,2	4,1,0	6,0,1
+chr1	300	.	G	A	.	PASS	.	AD	.	.,.	3,7

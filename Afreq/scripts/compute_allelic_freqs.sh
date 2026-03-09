@@ -1,53 +1,129 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-# Check parameters
-if [ "$#" -ne 2 ]; then
-    echo "Usage: $0 <VCF_PATH> <SUFFIX>"
+usage() {
+    local prog="${1:-compute_allelic_freqs.sh}"
+
+    cat <<EOF
+Usage:
+  ${prog} --vcf <file.vcf[.gz]> --out-prefix <prefix>
+
+Description:
+  Extract allele depths (AD) from a VCF using bcftools query and compute:
+    - reference allele frequencies
+    - total depths
+
+  Only biallelic sites are processed.
+  Multiallelic sites are ignored with a warning.
+
+Outputs:
+  <prefix>_ref_allelic_freqs.tsv
+  <prefix>_total_depths.tsv
+
+Options:
+  --vcf PATH          Input VCF file
+  --out-prefix STR    Prefix for output files
+  -h, --help          Show this help message
+EOF
+}
+
+VCF_PATH=""
+OUT_PREFIX=""
+USAGE_NAME="compute_allelic_freqs.sh"
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --vcf)
+            VCF_PATH="${2:-}"
+            shift 2
+            ;;
+        --out-prefix)
+            OUT_PREFIX="${2:-}"
+            shift 2
+            ;;
+        --usage-name)
+            USAGE_NAME="${2:-}"
+            shift 2
+            ;;
+        -h|--help)
+            usage "$USAGE_NAME"
+            exit 0
+            ;;
+        *)
+            echo "Error: unknown argument '$1'" >&2
+            usage "$USAGE_NAME" >&2
+            exit 1
+            ;;
+    esac
+done
+
+if [[ -z "$VCF_PATH" || -z "$OUT_PREFIX" ]]; then
+    echo "Error: --vcf and --out-prefix are required." >&2
+    usage "$USAGE_NAME" >&2
     exit 1
 fi
 
-VCF_PATH="$1"
-SUFFIX="$2"
+if [[ ! -f "$VCF_PATH" ]]; then
+    echo "Error: input VCF not found: $VCF_PATH" >&2
+    exit 1
+fi
 
-btquery_output="$SUFFIX".btquery
-output_freqs=ref_allelic_freqs_"$SUFFIX".tsv
-output_depths=total_depths_"$SUFFIX".tsv
+if ! command -v bcftools >/dev/null 2>&1; then
+    echo "Error: bcftools is not available in PATH." >&2
+    exit 1
+fi
 
-# Extract allele depths (AD) with bcftools
-bcftools query -f '%CHROM\t%POS[\t%AD]\n' "$VCF_PATH" > "$btquery_output"
+output_freqs="${OUT_PREFIX}_ref_allelic_freqs.tsv"
+output_depths="${OUT_PREFIX}_total_depths.tsv"
 
-# Retrieve the header (sample names)
-grep '#' "$VCF_PATH" | tail -1 | sed 's/ID.*FORMAT\t//' | sed 's/^#//' > "$output_freqs"
-grep '#' "$VCF_PATH" | tail -1 | sed 's/ID.*FORMAT\t//' | sed 's/^#//' > "$output_depths"
+sample_header="$(
+    bcftools query -l "$VCF_PATH" | paste -sd $'\t' -
+)"
 
-# Compute allele frequencies
-while IFS=$'\t' read -r chr pos rest; do
-  freqs=""
-  depths=""
+if [[ -z "$sample_header" ]]; then
+    echo "Error: no sample names found in VCF: $VCF_PATH" >&2
+    exit 1
+fi
 
-  IFS=$'\t' read -ra samples <<< "$rest"
+printf 'CHROM\tPOS\t%s\n' "$sample_header" > "$output_freqs"
+printf 'CHROM\tPOS\t%s\n' "$sample_header" > "$output_depths"
 
-  for sample in "${samples[@]}"; do
-    IFS=',' read -ra al_depths <<< "$sample"
-
-    if (( ${#al_depths[@]} != 2 )); then
-      [[ -n "$freqs" ]] && freqs="$freqs\terror" || freqs="error"
-      [[ -n "$depths" ]] && depths="$depths\terror" || depths="error"
-      echo "Warning: more than 2 alleles for $chr $pos"
-    else
-      sum=$((al_depths[0] + al_depths[1]))
-
-      if (( sum == 0 )); then
-        [[ -n "$freqs" ]] && freqs="$freqs\tNA" || freqs="NA"
-        [[ -n "$depths" ]] && depths="$depths\tNA" || depths="NA"
-      else
-        freq=$(echo "${al_depths[0]} / $sum" | bc -l | awk '{printf "%.2f", $0}')
-        [[ -n "$freqs" ]] && freqs="$freqs\t$freq" || freqs="$freq"
-        [[ -n "$depths" ]] && depths="$depths\t$sum" || depths="$sum"
-      fi
+bcftools query -f '%CHROM\t%POS\t%REF\t%ALT[\t%AD]\n' "$VCF_PATH" | \
+while IFS=$'\t' read -r chr pos ref alt rest; do
+    if [[ "$alt" == *,* ]]; then
+        echo "Warning: ${chr} ${pos}: ignored because it does not look like a biallelic site" >&2
+        continue
     fi
-  done
 
-  echo -e "$chr\t$pos\t$freqs" >> "$output_freqs"
-  echo -e "$chr\t$pos\t$depths" >> "$output_depths"
-done < "$btquery_output"
+    freqs=()
+    depths=()
+
+    IFS=$'\t' read -r -a samples <<< "$rest"
+
+    for sample in "${samples[@]}"; do
+        if [[ -z "$sample" || "$sample" == "." || "$sample" == ".,." ]]; then
+            freqs+=("NA")
+            depths+=("NA")
+            continue
+        fi
+
+        IFS=',' read -r -a al_depths <<< "$sample"
+
+        ref_depth="${al_depths[0]}"
+        alt_depth="${al_depths[1]}"
+
+        sum=$((ref_depth + alt_depth))
+
+        if (( sum == 0 )); then
+            freqs+=("NA")
+            depths+=("NA")
+        else
+            freq="$(awk -v ref="$ref_depth" -v sum="$sum" 'BEGIN { printf "%.2f", ref / sum }')"
+            freqs+=("$freq")
+            depths+=("$sum")
+        fi
+    done
+
+    printf '%s\t%s\t%s\n' "$chr" "$pos" "$(IFS=$'\t'; echo "${freqs[*]}")" >> "$output_freqs"
+    printf '%s\t%s\t%s\n' "$chr" "$pos" "$(IFS=$'\t'; echo "${depths[*]}")" >> "$output_depths"
+done

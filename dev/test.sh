@@ -1,4 +1,37 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+if pwd -W >/dev/null 2>&1; then
+  HOST_PWD="$(pwd -W)"
+  DOCKER_RUN_PREFIX=(env MSYS_NO_PATHCONV=1 docker run --rm -v "${HOST_PWD}:/work" -w /work)
+else
+  HOST_PWD="$(pwd)"
+  DOCKER_RUN_PREFIX=(docker run --rm -v "${HOST_PWD}:/work" -w /work)
+fi
+
+### Build docker image
+echo -e "\n### Building docker image"
+docker build -t mip-poolfreq .
+
+echo -e "\n### Checking container help"
+docker run --rm mip-poolfreq --help
+docker run --rm mip-poolfreq Afreq --help
+docker run --rm mip-poolfreq Afreq estimate --help
+docker run --rm mip-poolfreq Gfreq --help
+docker run --rm mip-poolfreq Gfreq estimate --help
+
+### Test Afreq in docker image
+echo -e "\n### Testing Afreq in docker image"
+"${DOCKER_RUN_PREFIX[@]}" mip-poolfreq bash ./dev/Afreq/test.sh
+
+### Test Gfreq in docker image
+echo -e "\n### Testing Gfreq in docker image"
+"${DOCKER_RUN_PREFIX[@]}" mip-poolfreq bash ./dev/Gfreq/test.sh
+
+exit 0
+
+
+### Gfreq extra hand testing
 # Note: works in WSL
 
 cd "mip-poolfreq"
@@ -14,10 +47,10 @@ cd "mip-poolfreq"
 )
 
 # test pipelines
-Rscript dev/test_estimate_pipeline.R
-Rscript dev/test_eval_pipeline.R
-Rscript dev/test_depth_pipeline.R
-Rscript dev/test_maf_pipeline.R
+Rscript dev/Gfreq/test_estimate_pipeline.R
+Rscript dev/Gfreq/test_eval_pipeline.R
+Rscript dev/Gfreq/test_depth_pipeline.R
+Rscript dev/Gfreq/test_maf_pipeline.R
 
 
 # test CLI
@@ -28,16 +61,16 @@ Rscript dev/test_maf_pipeline.R
 
 input_dir="Gfreq/example_data/input_files"
 
-mkdir -p dev/outputs/estimate
+mkdir -p dev/Gfreq/outputs/estimate
 Gfreq estimate \
   -v ${input_dir}/comp_genotypes.vcf \
   -a ${input_dir}/mix_ref_all_freqs.tsv \
   -d ${input_dir}/mix_read_depths.tsv \
   -t 40 \
   -l ${input_dir}/comp_libnames_corresp.tsv \
-  -o dev/outputs/estimate/genotype_frequencies.tsv
+  -o dev/Gfreq/outputs/estimate/genotype_frequencies.tsv
 
-mkdir -p dev/outputs/eval
+mkdir -p dev/Gfreq/outputs/eval
 Gfreq eval \
   -v ${input_dir}/comp_genotypes.vcf \
   --allele_freqs_mix ${input_dir}/mix_ref_all_freqs.tsv \
@@ -51,72 +84,16 @@ Gfreq eval \
   -s 5 \
   -r 20 \
   --sampling_seed 123 \
-  -o dev/outputs/eval
+  -o dev/Gfreq/outputs/eval
 
-mkdir -p dev/outputs/maf
+mkdir -p dev/Gfreq/outputs/maf
 Gfreq maf \
   -v ${input_dir}/comp_genotypes.vcf \
   -l ${input_dir}/comp_libnames_corresp.tsv \
-  -o dev/outputs/maf
+  -o dev/Gfreq/outputs/maf
 
-mkdir -p dev/outputs/depth
+mkdir -p dev/Gfreq/outputs/depth
 Gfreq depth \
-  -d dev/depth_files.list \
+  -d dev/Gfreq/data/depth_files.list \
   -l 50 \
-  -o dev/outputs/depth
-
-# test Docker image
-version=0.1.0
-docker build -t gfreq:${version} .
-docker run --rm gfreq:${version} --help
-
-input_dir="Gfreq/example_data/input_files"
-
-mkdir -p dev/outputs/estimate
-docker run --rm \
-  -v "$(pwd)/${input_dir}:/in:ro" \
-  -v "$(pwd)/dev/outputs/estimate:/out" \
-  gfreq:${version} estimate \
-  -v /in/comp_genotypes.vcf \
-  -a /in/mix_ref_all_freqs.tsv \
-  -d /in/mix_read_depths.tsv \
-  -t 40 \
-  -l /in/comp_libnames_corresp.tsv \
-  -o /out/genotype_frequencies.tsv
-
-mkdir -p dev/outputs/eval
-docker run --rm \
-  -v "$(pwd)/${input_dir}:/in:ro" \
-  -v "$(pwd)/dev/outputs/eval:/out" \
-  gfreq:${version} eval \
-  -v /in/comp_genotypes.vcf \
-  --allele_freqs_mix /in/mix_ref_all_freqs.tsv \
-  --depths_mix /in/mix_read_depths.tsv \
-  --exp_freqs_mix /in/mix_exp_geno_freqs.tsv \
-  -t 40 \
-  --allele_freqs_comp /in/comp_ref_all_freqs.tsv \
-  --depths_comp /in/comp_read_depths.tsv \
-  --exp_freqs_comp /in/comp_exp_geno_freqs.tsv \
-  -l /in/comp_libnames_corresp.tsv \
-  -s 5 \
-  -r 20 \
-  --sampling_seed 123 \
-  -o /out
-
-mkdir -p dev/outputs/maf
-docker run --rm \
-  -v "$(pwd)/${input_dir}:/in:ro" \
-  -v "$(pwd)/dev/outputs/maf:/out" \
-  gfreq:${version} maf \
-  -v /in/comp_genotypes.vcf \
-  -l /in/comp_libnames_corresp.tsv \
-  -o /out
-
-mkdir -p dev/outputs/depth
-docker run --rm \
-  -v "$(pwd)/dev:/in:ro" \
-  -v "$(pwd)/dev/outputs/depth:/out" \
-  gfreq:${version} depth \
-  -d /in/depth_files.list \
-  -l 50 \
-  -o /out
+  -o dev/Gfreq/outputs/depth
