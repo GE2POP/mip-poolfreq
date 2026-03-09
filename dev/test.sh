@@ -1,6 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+
+#### Test Gfreq R package build
+(
+  cd Gfreq
+  rm -f Gfreq_*.tar.gz
+  Rscript -e "devtools::document()"
+  R CMD build .
+  R CMD check --no-manual Gfreq_*.tar.gz
+  rm Gfreq_*.tar.gz
+)
+
+#### Tests in Docker
 if pwd -W >/dev/null 2>&1; then
   HOST_PWD="$(pwd -W)"
   DOCKER_RUN_PREFIX=(env MSYS_NO_PATHCONV=1 docker run --rm -v "${HOST_PWD}:/work" -w /work)
@@ -31,20 +43,11 @@ echo -e "\n### Testing Gfreq in docker image"
 exit 0
 
 
-### Gfreq extra hand testing
+
+
+#### Gfreq extra hand testing
 # Note: works in WSL
-
 cd "mip-poolfreq"
-
-# test build
-(
-  cd Gfreq
-  rm -f Gfreq_*.tar.gz
-  Rscript -e "devtools::document()"
-  R CMD build .
-  R CMD check --no-manual Gfreq_*.tar.gz
-  rm Gfreq_*.tar.gz
-)
 
 # test pipelines
 Rscript dev/Gfreq/test_estimate_pipeline.R
