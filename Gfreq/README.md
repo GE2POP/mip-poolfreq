@@ -19,17 +19,8 @@ Gfreq infers the contribution of each component to a set of mixtures using a VCF
 
 ## Installation
 
-### Container image (Docker / Apptainer)
-A pre-built OCI image is available via GitHub Container Registry:
-```bash
-ghcr.io/ge2pop/mip-poolfreq
-```
-
-#### Apptainer / Singularity
-Pull the image:
-```bash
-apptainer pull mip-poolfreq.sif docker://ghcr.io/ge2pop/mip-poolfreq:latest
-```
+### Using the container (recommended)
+See the container instructions in the [main README](../README.md#container-image).
 
 Run help:
 ```bash
@@ -54,7 +45,7 @@ After installation, add the Gfreq command-line tools to your PATH:
 ```bash
 export PATH="$(Rscript -e 'cat(system.file("bin", package="Gfreq"))'):$PATH"
 ```
-To make this permanent, add the line above to your ~/.bashrc.
+To make this permanent, add the line above to your `~/.bashrc`.
 
 Check installation:
 ```bash
