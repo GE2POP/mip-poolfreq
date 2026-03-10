@@ -1,5 +1,5 @@
 # mip-poolfreq
-![License](https://img.shields.io/github/license/GE2POP/mip-poolfreq)
+![License](https://img.shields.io/github/license/GE2POP/mip-poolfreq?style=flat)
 ![CI](https://github.com/GE2POP/mip-poolfreq/actions/workflows/ci.yml/badge.svg)
 [![Container](https://img.shields.io/badge/container-ghcr.io%2Fge2pop%2Fmip--poolfreq-blue)](https://github.com/GE2POP/mip-poolfreq/pkgs/container/mip-poolfreq)
 
