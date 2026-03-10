@@ -28,12 +28,12 @@ ghcr.io/ge2pop/mip-poolfreq
 #### Apptainer / Singularity
 Pull the image:
 ```bash
-apptainer pull gfreq.sif docker://ghcr.io/ge2pop/mip-poolfreq:latest
+apptainer pull mip-poolfreq.sif docker://ghcr.io/ge2pop/mip-poolfreq:latest
 ```
 
 Run help:
 ```bash
-apptainer exec gfreq.sif Gfreq --help
+apptainer exec mip-poolfreq.sif Gfreq --help
 ```
 
 ### Installing development / unreleased versions
@@ -83,8 +83,9 @@ Estimate genotype frequencies in each mixture from SNP allele frequencies and re
 
 #### Example
 ```
+SIF=$(realpath mip-poolfreq.sif)
 cd Gfreq
-Gfreq estimate \
+apptainer exec $SIF Gfreq estimate \
   -v example_data/input_files/comp_genotypes.vcf \
   -a example_data/input_files/mix_ref_all_freqs.tsv \
   -d example_data/input_files/mix_read_depths.tsv \
@@ -156,7 +157,7 @@ To evaluate how decreasing the number of SNPs impacts estimation accuracy, SNPs 
 
 #### Example
 ```
-Gfreq eval \
+apptainer exec $SIF Gfreq eval \
   -v example_data/input_files/comp_genotypes.vcf \
   --allele_freqs_mix example_data/input_files/mix_ref_all_freqs.tsv \
   --depths_mix example_data/input_files/mix_read_depths.tsv \
@@ -219,7 +220,7 @@ Compute Minor Allele Frequency (MAF) values from a VCF file and plot their distr
 
 #### Example
 ```
-Gfreq maf \
+apptainer exec $SIF Gfreq maf \
   -v example_data/input_files/comp_genotypes.vcf \
   -l example_data/input_files/comp_libnames_corresp.tsv \
   -o .
@@ -248,7 +249,7 @@ Plot read depth distribution (boxplots) per SNP.
 
 #### Example
 ```
-Gfreq depth \
+apptainer exec $SIF Gfreq depth \
   -d example_data/input_files/depth_files.list \
   -l 50 \
   -o .

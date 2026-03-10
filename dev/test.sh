@@ -21,8 +21,8 @@ else
   DOCKER_RUN_PREFIX=(docker run --rm -v "${HOST_PWD}:/work" -w /work)
 fi
 
-### Build docker image
-echo -e "\n### Building docker image"
+### Build Docker image
+echo -e "\n### Building Docker image"
 docker build -t mip-poolfreq .
 
 echo -e "\n### Checking container help"
@@ -32,13 +32,31 @@ docker run --rm mip-poolfreq Afreq estimate --help
 docker run --rm mip-poolfreq Gfreq --help
 docker run --rm mip-poolfreq Gfreq estimate --help
 
-### Test Afreq in docker image
-echo -e "\n### Testing Afreq in docker image"
+### Test Afreq in Docker image
+echo -e "\n### Testing Afreq in Docker image"
 "${DOCKER_RUN_PREFIX[@]}" mip-poolfreq bash ./dev/Afreq/test.sh
 
-### Test Gfreq in docker image
-echo -e "\n### Testing Gfreq in docker image"
+### Test Gfreq in Docker image
+echo -e "\n### Testing Gfreq in Docker image"
 "${DOCKER_RUN_PREFIX[@]}" mip-poolfreq bash ./dev/Gfreq/test.sh
+
+#### Tests in Apptainer
+REPO_ROOT=$(pwd)
+
+### Build Apptainer image
+docker save mip-poolfreq:latest -o mip-poolfreq.tar
+apptainer build --force mip-poolfreq.sif docker-archive:mip-poolfreq.tar
+SIF=$(realpath mip-poolfreq.sif)
+
+### Test Afreq in Apptainer image
+echo -e "\n### Testing Afreq in Apptainer image"
+apptainer exec --bind "${REPO_ROOT}:${REPO_ROOT}" "$SIF" \
+  bash "${REPO_ROOT}/dev/Afreq/test.sh"
+
+### Test Gfreq in Apptainer image
+echo -e "\n### Testing Gfreq in Apptainer image"
+apptainer exec --bind "${REPO_ROOT}:${REPO_ROOT}" "$SIF" \
+  bash "${REPO_ROOT}/dev/Gfreq/test.sh"
 
 exit 0
 
@@ -47,7 +65,6 @@ exit 0
 
 #### Gfreq extra hand testing
 # Note: works in WSL
-cd "mip-poolfreq"
 
 # test pipelines
 Rscript dev/Gfreq/test_estimate_pipeline.R

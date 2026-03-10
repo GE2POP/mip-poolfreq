@@ -10,7 +10,7 @@ library(vcfR)
 ## ---- Paths -----------------------------------------------------------------
 
 input_dir <- "Gfreq/example_data/input_files"
-out_dir <- "dev/outputs/maf"
+out_dir <- "dev/Gfreq/outputs/maf"
 
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 

@@ -10,7 +10,7 @@ library(zeallot)
 ## ---- Paths -----------------------------------------------------------------
 
 input_dir <- "Gfreq/example_data/input_files"
-out_dir <- "dev/outputs/estimate"
+out_dir <- "dev/Gfreq/outputs/estimate"
 
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 

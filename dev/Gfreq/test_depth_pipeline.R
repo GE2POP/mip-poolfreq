@@ -10,11 +10,11 @@ library(reshape2)
 
 ## ---- Paths -----------------------------------------------------------------
 
-out_dir <- "dev/outputs/depth"
+out_dir <- "dev/Gfreq/outputs/depth"
 
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
-depth_list <- "dev/depth_files.list"
+depth_list <- "dev/Gfreq/data/depth_files.list"
 
 ## ---- Run pipeline -----------------------------------------------------------
 

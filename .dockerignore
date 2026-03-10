@@ -19,6 +19,7 @@ Gfreq_*.tar.gz
 *.aux
 *.out
 *.toc
+tmp/
 
 # OS / editor
 .DS_Store
@@ -27,3 +28,7 @@ Gfreq_*.tar.gz
 
 # Dev folders
 dev/*/outputs/
+
+# Container
+*.sif
+mip-poolfreq.tar
