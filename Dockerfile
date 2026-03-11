@@ -54,13 +54,18 @@ RUN R -q -e 'site <- "/usr/local/lib/R/site-library"; \
 
 
 # Gfreq CLI
-COPY Gfreq/ Gfreq/
-RUN R CMD INSTALL Gfreq \
-    && ln -sf /usr/local/lib/R/site-library/Gfreq/bin/Gfreq /usr/local/bin/Gfreq
+COPY Gfreq/ /opt/mip-poolfreq/Gfreq/
+RUN R CMD INSTALL /opt/mip-poolfreq/Gfreq \
+    && chmod +x /usr/local/lib/R/site-library/Gfreq/exec/* \
+    && ln -sf /usr/local/lib/R/site-library/Gfreq/exec/Gfreq /usr/local/bin/Gfreq \
+    && rm -rf /opt/mip-poolfreq/Gfreq
 
 # Entrypoint
 COPY docker/entrypoint.sh /usr/local/bin/container-help
 RUN chmod +x /usr/local/bin/container-help
+
+RUN mkdir -p /work
+WORKDIR /work
 
 ENTRYPOINT ["/usr/local/bin/container-help"]
 CMD ["--help"]

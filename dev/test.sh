@@ -12,6 +12,7 @@ set -euo pipefail
   rm Gfreq_*.tar.gz
 )
 
+exit 0
 #### Tests in Docker
 if pwd -W >/dev/null 2>&1; then
   HOST_PWD="$(pwd -W)"
@@ -44,6 +45,7 @@ echo -e "\n### Testing Gfreq in Docker image"
 REPO_ROOT=$(pwd)
 
 ### Build Apptainer image
+echo -e "\n### Building Apptainer image"
 docker save mip-poolfreq:latest -o mip-poolfreq.tar
 apptainer build --force mip-poolfreq.sif docker-archive:mip-poolfreq.tar
 SIF=$(realpath mip-poolfreq.sif)

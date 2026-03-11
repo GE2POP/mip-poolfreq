@@ -34,8 +34,8 @@ if (!cmd %in% available_cmds) {
   quit(status = 1)
 }
 
-bin <- system.file("bin", cmd, package = "Gfreq")
-if (bin == "") {
+cmd_path <- system.file("exec", cmd, package = "Gfreq")
+if (cmd_path == "") {
   stop(
     paste0(
       "Command '", cmd, "' not found inside installed Gfreq package.\n",
@@ -45,5 +45,5 @@ if (bin == "") {
   )
 }
 
-status <- system2(bin, sub_args)
+status <- system2(cmd_path, sub_args)
 quit(status = status)
