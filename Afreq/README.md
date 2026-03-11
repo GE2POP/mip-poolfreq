@@ -24,7 +24,7 @@ See the container instructions in the [main README](../README.md#container-image
 
 Run help:
 ```bash
-apptainer exec mip-poolfreq.sif Gfreq --help
+apptainer exec mip-poolfreq.sif Afreq --help
 ```
 
 ## Command-line usage
@@ -52,7 +52,6 @@ These outputs can be used directly as inputs for **Gfreq**.
 ### Example
 ```
 SIF=$(realpath mip-poolfreq.sif)
-cd Gfreq
 apptainer exec $SIF Afreq estimate \
   --vcf input.vcf.gz \
   --out-prefix mixture
