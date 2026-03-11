@@ -1,7 +1,8 @@
 # mip-poolfreq
-![License](https://img.shields.io/github/license/GE2POP/mip-poolfreq?style=flat)
+![License](https://img.shields.io/github/license/GE2POP/mip-poolfreq)
 ![CI](https://github.com/GE2POP/mip-poolfreq/actions/workflows/ci.yml/badge.svg)
 [![Container](https://img.shields.io/badge/container-ghcr.io%2Fge2pop%2Fmip--poolfreq-blue)](https://github.com/GE2POP/mip-poolfreq/pkgs/container/mip-poolfreq)
+![version](https://img.shields.io/github/v/tag/GE2POP/mip-poolfreq?label=version)
 
 Tools to estimate allele frequencies and genotype frequencies from pooled sequencing data generated with Molecular Inversion Probes (MIPs).
 
@@ -29,7 +30,7 @@ VCF with AD field
    genotype frequency estimates
 </pre>
 
-Both tools are distributed together in a container to simplify reproducible analyses.
+Both tools are distributed together in a single container.
 
 
 ## Container image
