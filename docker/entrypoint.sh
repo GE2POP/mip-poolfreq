@@ -1,9 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+VERSION_FILE="/opt/mip-poolfreq/VERSION"
+PROJECT_VERSION="unknown"
+
+if [ -f "$VERSION_FILE" ]; then
+  PROJECT_VERSION="$(cat "$VERSION_FILE")"
+fi
+
 if [ "$#" -eq 0 ] || [[ "${1:-}" =~ ^(-h|--help|help)$ ]]; then
-  cat <<'EOF'
+  cat <<EOF
 mip-poolfreq container
+Version: ${PROJECT_VERSION}
 
 This container provides two command-line tools:
 

@@ -12,7 +12,6 @@ set -euo pipefail
   rm Gfreq_*.tar.gz
 )
 
-exit 0
 #### Tests in Docker
 if pwd -W >/dev/null 2>&1; then
   HOST_PWD="$(pwd -W)"

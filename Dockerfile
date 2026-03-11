@@ -37,12 +37,10 @@ RUN chmod +x /opt/mip-poolfreq/Afreq/bin/Afreq \
     /opt/mip-poolfreq/Afreq/scripts/compute_allelic_freqs.sh \
     && ln -sf /opt/mip-poolfreq/Afreq/bin/Afreq /usr/local/bin/Afreq
 
-
 # pak
 RUN R -q -e 'site <- "/usr/local/lib/R/site-library"; \
 .libPaths(c(site, .libPaths())); \
 install.packages("pak", repos="https://cloud.r-project.org", lib=site)'
-
 
 # Gfreq dependencies
 COPY Gfreq/DESCRIPTION Gfreq/DESCRIPTION
@@ -52,13 +50,15 @@ RUN R -q -e 'site <- "/usr/local/lib/R/site-library"; \
   .libPaths(c(site, .libPaths())); \
   pak::local_install_deps("Gfreq", dependencies=TRUE, upgrade=FALSE)'
 
-
 # Gfreq CLI
 COPY Gfreq/ /opt/mip-poolfreq/Gfreq/
 RUN R CMD INSTALL /opt/mip-poolfreq/Gfreq \
     && chmod +x /usr/local/lib/R/site-library/Gfreq/exec/* \
     && ln -sf /usr/local/lib/R/site-library/Gfreq/exec/Gfreq /usr/local/bin/Gfreq \
     && rm -rf /opt/mip-poolfreq/Gfreq
+
+# Version
+COPY VERSION /opt/mip-poolfreq/VERSION
 
 # Entrypoint
 COPY docker/entrypoint.sh /usr/local/bin/container-help
