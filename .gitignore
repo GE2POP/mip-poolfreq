@@ -1,30 +1,33 @@
-# R session files
+# R session
 .Rhistory
 .RData
-.Rproj.user
 .Ruserdata
+.Rproj.user
 *.Rproj
 
-# R CMD build and check
-Gfreq_*.tar.gz
+# R build / check
+*.tar.gz
 *.Rcheck/
-..Rcheck/
 
-# Temp files
+# Test outputs
+*.Rout
+*.Rout.fail
+
+# Temp
 *.log
 *.aux
 *.out
 *.toc
 tmp/
 
-# OS / editor
+# Editors
 .DS_Store
 .vscode/
 .idea/
 
-# Dev folders
+# Dev outputs
 dev/*/outputs/
 
-# Container
+# Containers
 *.sif
-mip-poolfreq.tar
+*.tar
