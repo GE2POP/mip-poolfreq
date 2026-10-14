@@ -12,37 +12,34 @@ evaluate_subsampling_effect(
   step_size,
   nb_reps = 5,
   out_dir,
-  seed = NULL
+  seed = NULL,
+  candidate_components = NULL
 )
 }
 \arguments{
-\item{genotyping_matrix}{Genotyping matrix with values 1 (hom. REF), 0.5 (het), and 0 (hom. ALT) (SNPs x components)}
+\item{genotyping_matrix}{Genotyping matrix (SNPs x components)}
 
 \item{allele_freqs}{Allele frequency matrix (SNPs x mixtures)}
 
-\item{snp_depths}{Read depths matrix (SNPs x mixtures)}
+\item{snp_depths}{Read depth matrix (SNPs x mixtures)}
 
 \item{expected_freqs_melt}{Melted dataframe of expected genotype frequencies}
 
 \item{step_size}{Number of SNPs to increment by when subsampling}
 
-\item{nb_reps}{Integer. Number of random subsampling replicates per SNP subset size (default = 5).}
+\item{nb_reps}{Number of random subsampling replicates per SNP subset size (default = 5)}
 
-\item{out_dir}{Path to the output directory to save plots and result files}
+\item{out_dir}{Output directory}
 
-\item{seed}{Integer. Optional random seed used to ensure reproducibility of SNP subsampling replicates. If NULL (default), results are stochastic.}
+\item{seed}{Optional random seed for reproducibility (default = NULL)}
+
+\item{candidate_components}{Optional binary matrix (samples x components)}
 }
 \value{
-A named list with two elements:
-\describe{
-  \item{stats}{A list of dataframes from \code{compute_stats_per_exp_freq()}: mean and standard deviation per expected frequency}
-  \item{bias}{A list of dataframes from \code{compute_bias()}: bias per component and per expected frequency}
-}
+Invisibly returns NULL and saves a PNG boxplot of estimation errors.
 }
 \description{
-This function evaluates the impact of subsampling different numbers of SNPs on the estimation
-of genotype frequencies. For each SNP subset size (provided in `nb_snps_vector`), the function:
-- Estimates genotype frequencies
-- Merges all estimates for comparison
-- Produces summary statistics, boxplots, correlation plots, and bias analyses
+This function estimates genotype frequencies from random SNP subsets of
+increasing sizes and plots the resulting estimation errors.
+Subsets yielding no identifiable estimates are excluded from the plot.
 }

@@ -13,6 +13,7 @@ load_inputs(
   allele_freqs_components_path = NULL,
   snp_depths_components_path = NULL,
   expected_freqs_components_path = NULL,
+  candidate_components_path = NULL,
   min_depth = 0
 )
 }
@@ -33,6 +34,8 @@ load_inputs(
 
 \item{expected_freqs_components_path}{[character|NULL] Optional path to the expected genotype frequencies for component libraries.}
 
+\item{candidate_components_path}{[character|NULL] Optional path to a TSV file specifying candidate components (0/1) for each sample. If NULL, all components are considered.}
+
 \item{min_depth}{[numeric] Minimum SNP depth threshold used for filtering.}
 }
 \value{
@@ -44,6 +47,7 @@ A named list containing the following elements:
   - `allele_freqs_components`: formatted allele frequency table for components (if provided).
   - `snp_depths_components`: formatted SNP depth table for components (if provided).
   - `expected_freqs_components_melt`: melted expected genotype frequencies for components (if provided).
+  - `candidate_components`: binary matrix of candidate components (samples x components), or NULL if not provided.
 }
 \description{
 This function imports, formats, and filters input data for genotype frequency

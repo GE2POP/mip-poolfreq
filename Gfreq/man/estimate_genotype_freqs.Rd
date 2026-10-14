@@ -10,7 +10,9 @@ estimate_genotype_freqs(
   snp_depths = NULL,
   expected_freqs_melt = NULL,
   est_freq_col_name = "EstFreq",
-  out_file = NULL
+  out_file = NULL,
+  candidate_components = NULL,
+  show_warnings = TRUE
 )
 }
 \arguments{
@@ -24,10 +26,14 @@ estimate_genotype_freqs(
 
 \item{est_freq_col_name}{Column name for estimated frequencies (default = "EstFreq")}
 
-\item{out_file}{Path to the output file to write the estimated genotype frequencies (default = NULL)}
+\item{out_file}{Optional output TSV path. When provided, also writes a companion file with monomorphic SNP allele frequency deviations (default = NULL).}
+
+\item{candidate_components}{Optional binary matrix (mixtures x components)}
+
+\item{show_warnings}{Whether to report filtering and estimation issues}
 }
 \value{
-A melted dataframe of the estimated genotype frequencies
+Long-format dataframe of estimated genotype frequencies, with NA for excluded components or non-identifiable estimates.
 }
 \description{
 Estimate genotype frequencies from genotyping matrix and allele frequencies

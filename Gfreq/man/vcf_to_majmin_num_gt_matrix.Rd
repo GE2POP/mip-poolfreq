@@ -10,7 +10,7 @@ vcf_to_majmin_num_gt_matrix(vcf_path, lib_names_corresp_path = NULL)
 \item{vcf_path}{Path to VCF file.}
 
 \item{lib_names_corresp_path}{Optional path to a two-column mapping table
-(Library_name -> Genotype) for renaming samples.}
+(library_name -> genotype) for renaming samples.}
 }
 \value{
 Numeric genotyping matrix (SNPs x samples) oriented to major/minor:

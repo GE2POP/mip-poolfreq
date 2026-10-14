@@ -10,24 +10,27 @@ estimate_freq_errors_subsampling(
   step_size,
   nb_reps = 5,
   snp_depths = NULL,
-  expected_freqs_melt
+  expected_freqs_melt,
+  candidate_components = NULL
 )
 }
 \arguments{
-\item{genotyping_matrix}{Genotyping matrix with values 1 (hom. REF), 0.5 (het), and 0 (hom. ALT) (SNPs x components)}
+\item{genotyping_matrix}{Genotyping matrix (SNPs x components)}
 
 \item{allele_freqs}{Allele frequency matrix (SNPs x mixtures)}
 
 \item{step_size}{Number of SNPs to increment by when subsampling}
 
-\item{nb_reps}{Integer. Number of random subsampling replicates per SNP subset size (default = 5).}
+\item{nb_reps}{Number of random subsampling replicates per SNP subset size (default = 5)}
 
 \item{snp_depths}{Read depths matrix (SNPs x mixtures) (default = NULL)}
 
 \item{expected_freqs_melt}{Melted dataframe of expected genotype frequencies}
+
+\item{candidate_components}{Optional binary matrix (mixtures x components)}
 }
 \value{
-A dataframe of the estimation errors
+Dataframe containing SNP subset size, replicate and estimation error for successfully estimated frequencies
 }
 \description{
 Estimate genotype frequency errors under SNP subsampling with replicates

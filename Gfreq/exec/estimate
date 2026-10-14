@@ -20,6 +20,7 @@ option_list <- list(
   make_option(c("--depths", "-d"), type = "character", help = "Path to SNP depths file (with a 'CHROM' and a 'POS' columns)"),
   make_option(c("--min_depth", "-t"), type = "numeric", default = 0, help = "Minimum read depth threshold. SNPs with at least one genotype < threshold we be removed."),
   make_option(c("--libs", "-l"), type = "character", default = NULL, help = "Path to library name correspondence file"),
+  make_option(c("--candidate_components", "-c"), type = "character", default = NULL, help = "TSV file specifying candidate components (0/1) for each sample"),
   make_option(c("--output_file", "-o"), type = "character", help = "Path to output file")
 )
 
@@ -30,6 +31,7 @@ estimate_pipeline(
   allele_freqs_path = opt$allele_freqs,
   snp_depths_path = opt$depths,
   lib_names_corresp_path = opt$libs,
+  candidate_components_path = opt$candidate_components,
   min_depth = opt$min_depth,
   output_file_name = opt$output_file
 )

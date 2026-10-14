@@ -7,6 +7,7 @@
 #' @param allele_freqs_path Path to allele frequencies file
 #' @param snp_depths_path Path to SNP depths file
 #' @param lib_names_corresp_path Optional path to library name correspondence file
+#' @param candidate_components_path Optional path to a TSV file specifying candidate components for each sample.
 #' @param min_depth Minimum read depth threshold
 #' @param output_file_name Output file path
 #'
@@ -17,6 +18,7 @@ estimate_pipeline <- function(
   allele_freqs_path,
   snp_depths_path,
   lib_names_corresp_path = NULL,
+  candidate_components_path = NULL,
   min_depth = 0,
   output_file_name
 ) {
@@ -27,7 +29,8 @@ estimate_pipeline <- function(
   )
 
   optional_files <- list(
-    libs = lib_names_corresp_path
+    libs = lib_names_corresp_path,
+    candidate_components = candidate_components_path
   )
 
   check_missing_args(args = c(required_files, output_file_name = output_file_name, min_depth = min_depth))
@@ -41,6 +44,7 @@ estimate_pipeline <- function(
   inputs <- load_inputs(
     genotyping_vcf_path = genotyping_vcf_path,
     lib_names_corresp_path = lib_names_corresp_path,
+    candidate_components_path = candidate_components_path,
     allele_freqs_mixtures_path = allele_freqs_path,
     snp_depths_mixtures_path = snp_depths_path,
     min_depth = min_depth
@@ -50,6 +54,7 @@ estimate_pipeline <- function(
     genotyping_matrix = inputs$genotyping_matrix,
     allele_freqs = inputs$allele_freqs_mixtures,
     snp_depths = inputs$snp_depths_mixtures,
+    candidate_components = inputs$candidate_components,
     out_file = output_file_name
   )
 

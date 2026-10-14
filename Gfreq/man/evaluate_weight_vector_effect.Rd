@@ -9,7 +9,8 @@ evaluate_weight_vector_effect(
   allele_freqs,
   snp_depths,
   expected_freqs_melt,
-  out_dir
+  out_dir,
+  candidate_components = NULL
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ evaluate_weight_vector_effect(
 \item{expected_freqs_melt}{Melted dataframe of expected genotype frequencies}
 
 \item{out_dir}{Path the the output directory to write output files}
+
+\item{candidate_components}{Optional binary matrix (samples x components). If NULL, all components are considered.}
 }
 \value{
 A named list with two elements:

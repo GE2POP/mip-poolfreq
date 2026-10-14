@@ -1,4 +1,4 @@
-#' @importFrom stats aggregate lm coef aov TukeyHSD sd as.formula coefficients
+#' @importFrom stats aggregate lm coef aov TukeyHSD sd as.formula coefficients complete.cases
 #' @importFrom utils read.table write.table
 #' @importFrom graphics hist par axis points abline text
 #' @importFrom grDevices png pdf dev.off

@@ -9,6 +9,7 @@ estimate_pipeline(
   allele_freqs_path,
   snp_depths_path,
   lib_names_corresp_path = NULL,
+  candidate_components_path = NULL,
   min_depth = 0,
   output_file_name
 )
@@ -21,6 +22,8 @@ estimate_pipeline(
 \item{snp_depths_path}{Path to SNP depths file}
 
 \item{lib_names_corresp_path}{Optional path to library name correspondence file}
+
+\item{candidate_components_path}{Optional path to a TSV file specifying candidate components for each sample.}
 
 \item{min_depth}{Minimum read depth threshold}
 

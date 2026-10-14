@@ -12,6 +12,7 @@
 #' @param snp_depths_components_path Optional path to SNP depths file for components
 #' @param expected_freqs_components_path Optional path to expected genotype frequencies for components
 #' @param lib_names_corresp_path Optional path to library name correspondence file
+#' @param candidate_components_path Optional path to a TSV file specifying candidate components for each sample.
 #' @param min_depth Minimum read depth threshold
 #' @param subsampling_step SNP subsampling step size
 #' @param subsampling_reps Integer. Number of random subsampling replicates per SNP subset size (default = 5).
@@ -29,6 +30,7 @@ eval_pipeline <- function(
     snp_depths_components_path = NULL,
     expected_freqs_components_path = NULL,
     lib_names_corresp_path = NULL,
+    candidate_components_path = NULL,
     min_depth = 0,
     subsampling_step = 50,
     subsampling_reps = 5,
@@ -47,7 +49,8 @@ eval_pipeline <- function(
         libs = lib_names_corresp_path,
         allele_freqs_comp = allele_freqs_components_path,
         depths_comp = snp_depths_components_path,
-        exp_freqs_comp = expected_freqs_components_path
+        exp_freqs_comp = expected_freqs_components_path,
+        candidate_components = candidate_components_path
     )
 
     check_missing_args(args = c(required_files, min_depth))
@@ -56,6 +59,13 @@ eval_pipeline <- function(
         required_files = required_files,
         optional_files = optional_files
     )
+
+    component_files <- list(allele_freqs_components_path, snp_depths_components_path, expected_freqs_components_path)
+    provided <- !vapply(component_files, is.null, logical(1))
+
+    if (any(provided) && !all(provided)) {
+        stop("Component allele frequencies, read depths and expected genotype frequencies must be provided together.")
+    }
 
     inputs <- load_inputs(
         genotyping_vcf_path = genotyping_vcf_path,
@@ -66,6 +76,7 @@ eval_pipeline <- function(
         allele_freqs_components_path = allele_freqs_components_path,
         snp_depths_components_path = snp_depths_components_path,
         expected_freqs_components_path = expected_freqs_components_path,
+        candidate_components_path = candidate_components_path,
         min_depth = min_depth
     )
 
@@ -84,8 +95,11 @@ eval_pipeline <- function(
         allele_freqs = inputs$allele_freqs_mixtures,
         snp_depths = inputs$snp_depths_mixtures,
         expected_freqs_melt = inputs$expected_freqs_mixtures_melt,
+        candidate_components = inputs$candidate_components,
         out_file = glue("{general_subdir}/est_geno_freqs_mixtures.tsv")
     )
+    genotype_frequencies_mixtures <- filter_unestimated_freqs(genotype_frequencies_mixtures)
+    if (nrow(genotype_frequencies_mixtures) == 0) stop("No genotype frequencies could be estimated.")
 
     compute_stats_per_exp_freq(
         freqs_df = genotype_frequencies_mixtures,
@@ -93,13 +107,15 @@ eval_pipeline <- function(
     )
 
     if (! is.null(inputs$allele_freqs_components)){
-    genotype_frequencies_components<-estimate_genotype_freqs(
-        genotyping_matrix = inputs$genotyping_matrix,
-        allele_freqs = inputs$allele_freqs_components,
-        snp_depths = inputs$snp_depths_components,
-        expected_freqs_melt = inputs$expected_freqs_components_melt,
-        out_file = glue("{general_subdir}/est_geno_freqs_components.tsv")
-    )
+        genotype_frequencies_components<-estimate_genotype_freqs(
+            genotyping_matrix = inputs$genotyping_matrix,
+            allele_freqs = inputs$allele_freqs_components,
+            snp_depths = inputs$snp_depths_components,
+            expected_freqs_melt = inputs$expected_freqs_components_melt,
+            candidate_components = inputs$candidate_components,
+            out_file = glue("{general_subdir}/est_geno_freqs_components.tsv")
+        )
+        genotype_frequencies_components <- filter_unestimated_freqs(genotype_frequencies_components)
     } else {
         genotype_frequencies_components<-NULL
     }
@@ -120,6 +136,7 @@ eval_pipeline <- function(
         allele_freqs = inputs$allele_freqs_mixtures,
         snp_depths = inputs$snp_depths_mixtures,
         expected_freqs_melt = inputs$expected_freqs_mixtures_melt,
+        candidate_components = inputs$candidate_components,
         out_dir = weights_subdir
     )
 
@@ -131,6 +148,7 @@ eval_pipeline <- function(
         step_size = subsampling_step,
         nb_reps = subsampling_reps,
         seed = subsampling_seed,
+        candidate_components = inputs$candidate_components,
         out_dir = subsampling_subdir
     )
 

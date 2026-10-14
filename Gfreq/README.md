@@ -43,7 +43,7 @@ R CMD INSTALL mip-poolfreq/Gfreq
 
 After installation, add the Gfreq command-line tools to your PATH:
 ```bash
-export PATH="$(Rscript -e 'cat(system.file("bin", package="Gfreq"))'):$PATH"
+export PATH="$(Rscript -e 'cat(system.file("exec", package="Gfreq"))'):$PATH"
 ```
 To make this permanent, add the line above to your `~/.bashrc`.
 
@@ -69,6 +69,7 @@ Estimate genotype frequencies in each mixture from SNP allele frequencies and re
 -d, --depths           Mixture depths per SNP TSV file (including columns CHROM, POS)
 -t, --min_depth        Minimum read depth threshold *(default = 0)*
 -l, --libs             Library name correspondence TSV file *(optional)*
+-c, --candidate_components   Candidate components TSV file *(optional)*
 -o, --output_file      Genotype frequencies output TSV file
 ```
 
@@ -95,16 +96,23 @@ This can help exclude low-confidence loci with unreliable allele frequency estim
 Each row corresponds to one **component–mixture** pair, with the estimated frequency of that component in the mixture.
 ```text
 Component	Mixture	EstFreq
-EL4X_35	Tm1310	0.31356190061712
-GQ4X_83	Tm1310	0.239210978119877
-EL4X_199	Tm1310	0.23199517936899
-EL4X_482	Tm1310	0.23539587920789
-EL4X_35	Tm1313	0.0637226242816768
-GQ4X_83	Tm1313	0.313386942157224
-EL4X_199	Tm1313	0.30785570431057
-EL4X_482	Tm1313	0.348394182207116
+EL4X_35	Tm1310	0.3136
+GQ4X_83	Tm1310	0.2392
+EL4X_199	Tm1310	0.2320
+EL4X_482	Tm1310	0.2354
+EL4X_35	Tm1313	0.0637
+GQ4X_83	Tm1313	0.3134
+EL4X_199	Tm1313	0.3079
+EL4X_482	Tm1313	0.3484
 ...
 ```
+
+• `<output_file_without_extension>_monomorphic_deviations.tsv`
+Diagnostic table reporting deviations between observed and expected reference allele frequencies at SNPs that are homozygous monomorphic (all 0 or all 1) among the candidate components of each mixture.
+
+Rows correspond to SNPs and columns to mixtures. Values represent absolute deviations in percentage points. `NA` indicates that the SNP is not monomorphic among the candidates or could not be evaluated.
+
+A warning is issued when a deviation exceeds 10 percentage points. These SNPs are not automatically excluded from the regression.
 
 
 ### 2. `eval`
@@ -140,6 +148,7 @@ To evaluate how decreasing the number of SNPs impacts estimation accuracy, SNPs 
 --depths_comp                  Component depths per SNP TSV file (including columns CHROM, POS) *(optional)*
 --exp_freqs_comp               Component expected genotype frequencies TSV file *(optional)*
 -l, --libs                     Library name correspondence TSV file *(optional)*
+-c, --candidate_components   Candidate components TSV file *(optional)*
 -s, --sampling_step         Number of SNPs added between subsampling iterations *(default = 50)*
 -r, --sampling_reps         Number of random subsampling replicates per SNP subset size *(default = 5)*
 --sampling_seed             Integer. Optional random seed to ensure reproducibility of SNP subsampling replicates (default: not set).
@@ -176,6 +185,8 @@ Filtering is based exclusively on the mixture depth file (`--depths_mix`), but t
   - `est_geno_freqs_components.tsv`: estimated genotype frequencies in components
   - tables reporting mean and standard deviation of estimated frequencies (in mixtures) per expected value
   - tables of estimated biases (mean errors) per component and per expected frequency, with corresponding error boxplots. Differences among components are assessed using one-way ANOVA followed by Tukey’s HSD post-hoc test; significance groups (letters) are reported in the `bias_per_component` table.
+  - `est_geno_freqs_mixtures_monomorphic_deviations.tsv`: allele frequency deviations at monomorphic SNPs in mixtures.
+  - `est_geno_freqs_components_monomorphic_deviations.tsv`: equivalent diagnostic for individual component controls, when provided.
   - scatter plot of estimated vs expected genotype frequencies; each dot represents the frequency of one component in a mixture. If --allele_freqs_comp, --depths_comp and --exp_freqs_comp were provided, frequencies estimated in one-component mixtures (i.e. component libraries treated as mixtures for validation) are shown in grey and are excluded from the regression fitting.
 <p align="center">
   <img width="602" height="415" alt="image" src="https://github.com/user-attachments/assets/e79ee3aa-8b27-49ae-8ff6-999d6eaecbf2" />
@@ -312,5 +323,28 @@ It does not affect computations, only the display of sample names.
 
 | Column | Description |
 |---------|-------------|
-| `Sample_ID` | Library name as found in the VCF |
-| `Library_Name` | Corresponding genotype name to display in outputs |
+| `genotype` | Corresponding genotype name to display in outputs |
+| `library_name` | Library name as found in the VCF |
+
+### • Candidate components file (`--candidate_components`)
+
+Optional TSV file specifying which components are considered in the genotype frequency estimation for each mixture.
+
+The first column must be named `Mixture`, followed by one column for each component in the genotyping VCF (using genotype names from `--libs`, if provided).
+
+Values must be binary:
+- `1`: component included in the regression.
+- `0`: component excluded from the regression.
+
+Example:
+
+```text
+Mixture   EL4X_35   GQ4X_83   EL4X_199   EL4X_482
+Tm1310    1         1         1          0
+Tm1311    1         0         1          1
+Tm1312    1         1         1          1
+```
+
+The file must contain all components and all samples being analysed, including individual component controls when provided to `eval`. At least one component must be selected per sample.
+
+If this option is omitted, all components are considered candidates for every mixture.

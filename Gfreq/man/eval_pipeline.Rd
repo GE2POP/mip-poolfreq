@@ -13,6 +13,7 @@ eval_pipeline(
   snp_depths_components_path = NULL,
   expected_freqs_components_path = NULL,
   lib_names_corresp_path = NULL,
+  candidate_components_path = NULL,
   min_depth = 0,
   subsampling_step = 50,
   subsampling_reps = 5,
@@ -36,6 +37,8 @@ eval_pipeline(
 \item{expected_freqs_components_path}{Optional path to expected genotype frequencies for components}
 
 \item{lib_names_corresp_path}{Optional path to library name correspondence file}
+
+\item{candidate_components_path}{Optional path to a TSV file specifying candidate components for each sample.}
 
 \item{min_depth}{Minimum read depth threshold}
 
